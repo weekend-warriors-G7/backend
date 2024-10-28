@@ -1,10 +1,10 @@
 .PHONY: clean, build, up_local, down_local
 
 clean:
-	./mvnw clean
+	./mvnw clean || .\mvnw clean
 
 build: clean
-	./mvnw package
+	./mvnw package || .\mvnw package
 
 docker_build: build
 	docker build -t gabjea/weekend-warriors-backend:latest .
