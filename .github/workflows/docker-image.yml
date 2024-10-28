@@ -44,4 +44,4 @@ jobs:
         run: make docker_build
 
       - name: Push Docker image
-        run: make up_local
+        run: docker push gabjea/weekend-warriors-backend:latest
