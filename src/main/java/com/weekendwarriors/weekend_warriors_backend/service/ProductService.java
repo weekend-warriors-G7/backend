@@ -20,18 +20,18 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public Product fromDTO(ProductDTO dto)
+    public Product changeDtoToEntity(ProductDTO productDTO)
     {
         return new Product
                 (
-                    dto.getName(),
-                    dto.getPrice(),
-                    dto.getDescription(),
-                    dto.getTags()
+                    productDTO.getName(),
+                    productDTO.getPrice(),
+                    productDTO.getDescription(),
+                    productDTO.getTags()
                 );
     }
 
-    public ProductDTO toDTO(Product product)
+    public ProductDTO ChangeEntityToDto(Product product)
     {
         return new ProductDTO
             (
@@ -44,9 +44,9 @@ public class ProductService {
 
     public ProductDTO addProduct(ProductDTO dto)
     {
-        Product product = fromDTO(dto);
+        Product product = changeDtoToEntity(dto);
         Product savedProduct = productRepository.save(product);
-        return toDTO(savedProduct);
+        return ChangeEntityToDto(savedProduct);
     }
 
     public List<Product> getAllProducts()
@@ -68,7 +68,7 @@ public class ProductService {
             product.setPrice(dto.getPrice());
             product.setDescription(dto.getDescription());
             product.setTags(dto.getTags().stream().map(String::toLowerCase).collect(Collectors.toList()));
-            return toDTO(productRepository.save(product));
+            return ChangeEntityToDto(productRepository.save(product));
         }
         ).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }

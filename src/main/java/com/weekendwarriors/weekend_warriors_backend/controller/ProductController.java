@@ -32,15 +32,15 @@ public class ProductController {
     }
 
     @PostMapping
-    public ProductDTO addProduct(@RequestBody ProductDTO dto)
+    public ProductDTO addProduct(@RequestBody ProductDTO productDTO)
     {
-        return productService.addProduct(dto);
+        return productService.addProduct(productDTO);
     }
 
     @PutMapping("/{id}")
-    public ProductDTO updateProduct(@PathVariable String id, @RequestBody ProductDTO dto)
+    public ProductDTO updateProduct(@PathVariable String id, @RequestBody ProductDTO productDTO)
     {
-        return productService.updateProduct(id, dto);
+        return productService.updateProduct(id, productDTO);
     }
 
     @DeleteMapping("/{id}")
