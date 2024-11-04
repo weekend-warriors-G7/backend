@@ -34,6 +34,16 @@ jobs:
       - name: Build and Package with Makefile
         run: make build
 
+      - name: Set env vars
+        env:
+          DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+          DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
+          JWT_SECRET_KEY:  ${{ secrets.JWT_SECRET_KEY }}
+        run: |
+          # Export secrets as environment variables
+          echo "DATABASE_NAME=${DATABASE_NAME}" >> $GITHUB_ENV
+          echo "DATABASE_CONNECTION_STRING=${DATABASE_CONNECTION_STRING}" >> $GITHUB_ENV
+          echo "JWT_SECRET_KEY=${JWT_SECRET_KEY}" >> $GITHUB_ENV
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
