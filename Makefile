@@ -1,10 +1,14 @@
 .PHONY: clean, build, up_local, down_local
 
+
 clean:
 	.\mvnw clean || ./mvnw clean
 
 build: clean
-	export $(shell grep -v '^#' .env | xargs) && .\mvnw package || ./mvnw package
+	@if [ -f .env ]; then \
+    	  export $(shell grep -v '^#' .env | xargs); \
+    fi; \
+    .\mvnw package || ./mvnw package
 
 docker_build: build
 	docker build -t gabjea/weekend-warriors-backend:latest .
