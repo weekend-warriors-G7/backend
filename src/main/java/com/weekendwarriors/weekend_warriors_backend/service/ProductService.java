@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -27,7 +26,10 @@ public class ProductService {
                     productDTO.getName(),
                     productDTO.getPrice(),
                     productDTO.getDescription(),
-                    productDTO.getTags()
+                    productDTO.getSize(),
+                    productDTO.getMaterial(),
+                    productDTO.getClothingType(),
+                    productDTO.getColour()
                 );
     }
 
@@ -38,7 +40,10 @@ public class ProductService {
                 product.getName(),
                 product.getPrice(),
                 product.getDescription(),
-                product.getTags()
+                product.getSize(),
+                product.getMaterial(),
+                product.getClothingType(),
+                product.getColour()
             );
     }
 
@@ -67,7 +72,10 @@ public class ProductService {
             product.setName(dto.getName());
             product.setPrice(dto.getPrice());
             product.setDescription(dto.getDescription());
-            product.setTags(dto.getTags().stream().map(String::toLowerCase).collect(Collectors.toList()));
+            product.setSize(dto.getSize().toLowerCase());
+            product.setColour(dto.getSize().toLowerCase());
+            product.setMaterial(dto.getMaterial().toLowerCase());
+            product.setClothingType(dto.getClothingType().toLowerCase());
             return ChangeEntityToDto(productRepository.save(product));
         }
         ).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));

@@ -1,12 +1,15 @@
 package com.weekendwarriors.weekend_warriors_backend.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+@NoArgsConstructor
 @Document(collection = "products")
+@Getter
+@Setter
 public class Product
 {
     @Id
@@ -14,42 +17,19 @@ public class Product
     private String name;
     private Double price;
     private String description;
-    private List<String> tags;
+    private String size;
+    private String material;
+    private String clothingType;
+    private String colour;
 
-    // Constructors
-    public Product() {}
-
-    public Product(String name, Double price, String description, List<String> tags)
+    public Product(String name, Double price, String description, String size, String material, String clothingType, String colour)
     {
         this.name = name;
         this.price = price;
         this.description = description;
-        this.tags = tags;
-        setTags(tags);
-    }
-
-    // Getters
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public Double getPrice() { return price; }
-    public String getDescription() { return description; }
-
-    // Setters
-    public void setName(String name) { this.name = name; }
-    public void setPrice(Double price) { this.price = price; }
-    public void setDescription(String description) { this.description = description; }
-    public List<String> getTags() { return tags; }
-    public void setTags(List<String> tags)
-    {
-        if (tags != null)
-        {
-            this.tags = tags.stream()
-                    .map(String::toLowerCase)
-                    .collect(Collectors.toList());
-        }
-        else
-        {
-            this.tags = null;
-        }
+        this.size = size.toLowerCase();
+        this.material = material.toLowerCase();
+        this.clothingType = clothingType.toLowerCase();
+        this.colour = colour.toLowerCase();
     }
 }
