@@ -101,7 +101,7 @@ public class ProductService {
     {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-        if (image != null)
+        if (image != null && !image.isEmpty())
         {
             if (product.getImageId() != null && !product.getImageId().isEmpty())
             {
