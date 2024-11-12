@@ -1,6 +1,7 @@
 .PHONY: clean, build, up_local, down_local
 
 
+
 clean:
 	.\mvnw clean || ./mvnw clean
 
