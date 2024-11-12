@@ -18,8 +18,8 @@ public class WeekendWarriorsBackendApplication {
 		return "Weekend Warriors Backend: Greetings from Spring Boot Dockerized!";
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args)
+	{
 		SpringApplication.run(WeekendWarriorsBackendApplication.class, args);
 	}
-
 }
