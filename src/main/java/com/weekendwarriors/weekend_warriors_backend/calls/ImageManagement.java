@@ -1,184 +1,144 @@
 package com.weekendwarriors.weekend_warriors_backend.calls;
 
-import okhttp3.*;
 import lombok.Getter;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.http.MediaType;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 @Getter
 @Component
-public class ImageManagement
-{
+public class ImageManagement {
     private final String clientId;
     private final String clientSecret;
     private final String refreshToken;
-    private final String accesCode;
+    private final String accessCode;
+    private final WebClient webClient;
 
-    public ImageManagement(@Value("${imgur.client.id}") String clientId, @Value("${imgur.client.secret}") String clientSecret, @Value("${imgur.refresh.token}") String refreshToken) throws IOException {
+    public ImageManagement(
+            @Value("${imgur.client.id}") String clientId,
+            @Value("${imgur.client.secret}") String clientSecret,
+            @Value("${imgur.refresh.token}") String refreshToken) throws IOException {
+
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.refreshToken = refreshToken;
-        this.accesCode = getAccessCode(refreshToken, clientId, clientSecret);
+        this.webClient = WebClient.builder().build();
+        this.accessCode = getAccessCode(refreshToken, clientId, clientSecret);
     }
 
-    public static String getAccessCode(String refreshToken, String clientId, String clientSecret) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient.Builder().build();
+    public String getAccessCode(String refreshToken, String clientId, String clientSecret) throws IOException {
+        try {
+            String response = webClient.post()
+                    .uri("https://api.imgur.com/oauth2/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData("refresh_token", refreshToken)
+                            .with("client_id", clientId)
+                            .with("client_secret", clientSecret)
+                            .with("grant_type", "refresh_token"))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
-        FormBody body = new FormBody.Builder()
-                .add("refresh_token", refreshToken)
-                .add("client_id", clientId)
-                .add("client_secret", clientSecret)
-                .add("grant_type", "refresh_token")
-                .build();
-
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/oauth2/token")
-                .post(body)
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (response.isSuccessful() && response.body() != null)
-            {
-                String responseBody = response.body().string();
-                JSONObject jsonObject = new JSONObject(responseBody);
-                return jsonObject.getString("access_token");
-            }
-            else
-            {
-                throw new IOException("Unexpected code: " + response);
-            }
+            JSONObject jsonObject = new JSONObject(response);
+            return jsonObject.getString("access_token");
+        } catch (WebClientResponseException e) {
+            throw new IOException("Failed to get access token: " + e.getResponseBodyAsString(), e);
         }
     }
 
-    public String uploadImage(String image64) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient.Builder().build();
-        FormBody body = new FormBody.Builder()
-                .add("image", image64)
-                .build();
+    public String uploadImage(String image64) throws IOException {
+        try {
+            String response = webClient.post()
+                    .uri("https://api.imgur.com/3/image")
+                    .header("Authorization", "Bearer " + this.accessCode)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData("image", image64))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/3/image")
-                .post(body)
-                .addHeader("Authorization", "Bearer " + this.getAccesCode())
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (response.isSuccessful() && response.body() != null)
-            {
-                String responseBody = response.body().string();
-                JSONObject jsonObjectComplete = new JSONObject(responseBody);
-                JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
-                return jsonObject.getString("id");
-            }
-            else
-            {
-                throw new IOException("Unexpected code: " + response);
-            }
+            JSONObject jsonObjectComplete = new JSONObject(response);
+            JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
+            return jsonObject.getString("id");
+        } catch (WebClientResponseException e) {
+            throw new IOException("Failed to upload image: " + e.getResponseBodyAsString(), e);
         }
     }
 
-    public Boolean deleteImage(String imageId) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient.Builder().build();
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/3/image/"+imageId)
-                .delete()
-                .addHeader("Authorization", "Bearer " + this.getAccesCode())
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (response.isSuccessful() && response.body() != null)
-            {
-                return true;
-            }
-            else
-            {
-                throw new IOException("Unexpected code: " + response);
-            }
+    public Boolean deleteImage(String imageId) throws IOException {
+        try {
+            webClient.delete()
+                    .uri("https://api.imgur.com/3/image/" + imageId)
+                    .header("Authorization", "Bearer " + this.accessCode)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            throw new IOException("Failed to delete image: " + e.getResponseBodyAsString(), e);
         }
     }
 
-    public Boolean imageExists(String imageId) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient.Builder().build();
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/3/image/"+imageId)
-                .get()
-                .addHeader("Authorization", "Bearer " + this.getAccesCode())
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (response.isSuccessful())
-            {
-                return true;
-            }
-            else
-            {
-                throw new IOException("Unexpected code: " + response);
-            }
+    public Boolean imageExists(String imageId) throws IOException {
+        try {
+            webClient.get()
+                    .uri("https://api.imgur.com/3/image/" + imageId)
+                    .header("Authorization", "Bearer " + this.accessCode)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block();
+            return true;
+        } catch (WebClientResponseException.NotFound e) {
+            return false;
+        } catch (WebClientResponseException e) {
+            throw new IOException("Failed to check if image exists: " + e.getResponseBodyAsString(), e);
         }
     }
 
-    public String getImageLink(String imageId) throws IOException
-    {
-        OkHttpClient client = new OkHttpClient.Builder().build();
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/3/image/"+imageId)
-                .get()
-                .addHeader("Authorization", "Bearer " + this.getAccesCode())
-                .build();
-
-        try (Response response = client.newCall(request).execute())
-        {
-            if (response.isSuccessful())
-            {
-                String responseBody = response.body().string();
-                JSONObject jsonObjectComplete = new JSONObject(responseBody);
-                JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
-                return jsonObject.getString("link");
-            }
-            else
-            {
-                throw new IOException("Unexpected code: " + response);
-            }
-        }
+    public String getImageLink(String imageId) throws IOException {
+//        try {
+//            String response = webClient.get()
+//                    .uri("https://api.imgur.com/3/image/" + imageId)
+//                    .header("Authorization", "Bearer " + this.accessCode)
+//                    .retrieve()
+//                    .bodyToMono(String.class)
+//                    .block();
+//
+//            JSONObject jsonObjectComplete = new JSONObject(response);
+//            JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
+//            return jsonObject.getString("link");
+//        } catch (WebClientResponseException e) {
+//            throw new IOException("Failed to get image link: " + e.getResponseBodyAsString(), e);
+//        }
+        return "https://i.imgur.com/"+imageId+".jpeg";
     }
 
     public String uploadImageFile(File imageFile) throws IOException {
-        OkHttpClient client = new OkHttpClient.Builder().build();
+        try {
+            byte[] fileContent = Files.readAllBytes(imageFile.toPath());
 
-        RequestBody fileBody = RequestBody.create(imageFile, MediaType.parse("image/*"));
+            String response = webClient.post()
+                    .uri("https://api.imgur.com/3/image")
+                    .header("Authorization", "Bearer " + this.accessCode)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(BodyInserters.fromMultipartData("image", fileContent))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
-        MultipartBody body = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("image", imageFile.getName(), fileBody)
-                .build();
-
-        Request request = new Request.Builder()
-                .url("https://api.imgur.com/3/image")
-                .post(body)
-                .addHeader("Authorization", "Bearer " + this.getAccesCode())
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful() && response.body() != null) {
-                String responseBody = response.body().string();
-                JSONObject jsonObjectComplete = new JSONObject(responseBody);
-                JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
-                return jsonObject.getString("id");
-            } else {
-                throw new IOException("Unexpected response code: " + response);
-            }
+            JSONObject jsonObjectComplete = new JSONObject(response);
+            JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
+            return jsonObject.getString("id");
+        } catch (WebClientResponseException e) {
+            throw new IOException("Failed to upload image file: " + e.getResponseBodyAsString(), e);
         }
     }
 }
