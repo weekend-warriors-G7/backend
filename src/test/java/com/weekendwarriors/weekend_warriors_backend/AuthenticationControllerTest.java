@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.AuthenticationWithCredentialsRequest;
+import com.weekendwarriors.weekend_warriors_backend.dto.RegisterWithCredentialsRequest;
 import com.weekendwarriors.weekend_warriors_backend.dto.TokenResponse;
 import com.weekendwarriors.weekend_warriors_backend.exception.ExistingUser;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
@@ -51,7 +52,9 @@ public class AuthenticationControllerTest {
         //ARRANGE
         String userEmail = "test@test.com";
         String userPassword = "TESTtest1234!";
-        String registerJsonData = "{\"email\":\"%s\",\"password\":\"%s\"}".formatted(userEmail, userPassword);
+        String firstName = "user";
+        String lastName = "test";
+        String registerJsonData = "{\"email\":\"%s\",\"password\":\"%s\",\"firstName\":\"%s\",\"lastName\":\"%s\"}".formatted(userEmail, userPassword, firstName, lastName);
 
         //ACT
         ResultActions result = mockMvc.perform(post("/api/v1/auth/register")
@@ -62,7 +65,7 @@ public class AuthenticationControllerTest {
         result.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Successful register"));
 
-        verify(authService).register(any(AuthenticationWithCredentialsRequest.class));
+        verify(authService).register(any(RegisterWithCredentialsRequest.class));
     }
 
     @Test
@@ -70,9 +73,11 @@ public class AuthenticationControllerTest {
         // ARRANGE
         String userEmail = "existing@test.com";
         String userPassword = "TESTtest1234!";
-        String registerJsonData = "{\"email\":\"%s\",\"password\":\"%s\"}".formatted(userEmail, userPassword);
+        String firstName = "user";
+        String lastName = "test";
+        String registerJsonData = "{\"email\":\"%s\",\"password\":\"%s\",\"firstName\":\"%s\",\"lastName\":\"%s\"}".formatted(userEmail, userPassword, firstName, lastName);
 
-        Mockito.doThrow(new ExistingUser("Email already in use")).when(authService).register(any(AuthenticationWithCredentialsRequest.class));
+        Mockito.doThrow(new ExistingUser("Email already in use")).when(authService).register(any(RegisterWithCredentialsRequest.class));
 
         // ACT
         ResultActions result = mockMvc.perform(post("/api/v1/auth/register")
@@ -83,13 +88,13 @@ public class AuthenticationControllerTest {
         result.andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("Email already in use"));
 
-        verify(authService).register(any(AuthenticationWithCredentialsRequest.class));
+        verify(authService).register(any(RegisterWithCredentialsRequest.class));
     }
 
     @Test
     public void register_incorrectInputMissingField_returnsErrorMessage() throws Exception {
         // ARRANGE
-        String registerJsonData = "{\"email\":\"\",\"password\":\"TESTtest1234!\"}";
+        String registerJsonData = "{\"email\":\"\",\"password\":\"TESTtest1234!\",\"firstName\":\"firstname\",\"lastName\":\"lastname\"}";
 
         // ACT
         ResultActions result = mockMvc.perform(post("/api/v1/auth/register")
@@ -100,13 +105,13 @@ public class AuthenticationControllerTest {
         result.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Incorrect input"));
 
-        verify(authService, Mockito.never()).register(any(AuthenticationWithCredentialsRequest.class));
+        verify(authService, Mockito.never()).register(any(RegisterWithCredentialsRequest.class));
     }
 
     @Test
     public void register_incorrectInputForEmail_returnsErrorMessage() throws Exception {
         // ARRANGE
-        String registerJsonData = "{\"email\":\"invalid-email\",\"password\":\"TESTtest1234!\"}";
+        String registerJsonData = "{\"email\":\"invalid-email\",\"password\":\"TESTtest1234!\",\"firstName\":\"firstname\",\"lastName\":\"lastname\"}";
 
         // ACT
         ResultActions result = mockMvc.perform(post("/api/v1/auth/register")
@@ -117,13 +122,13 @@ public class AuthenticationControllerTest {
         result.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Incorrect input"));
 
-        verify(authService, Mockito.never()).register(any(AuthenticationWithCredentialsRequest.class));
+        verify(authService, Mockito.never()).register(any(RegisterWithCredentialsRequest.class));
     }
 
     @Test
     public void register_incorrectInputWeakPassword_returnsErrorMessage() throws Exception {
         // ARRANGE
-        String registerJsonData = "{\"email\":\"invalid-email\",\"password\":\"test\"}";
+        String registerJsonData = "{\"email\":\"email@test.com\",\"password\":\"test\",\"firstName\":\"firstname\",\"lastName\":\"lastname\"}";
 
         // ACT
         ResultActions result = mockMvc.perform(post("/api/v1/auth/register")
@@ -134,7 +139,7 @@ public class AuthenticationControllerTest {
         result.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Incorrect input"));
 
-        verify(authService, Mockito.never()).register(any(AuthenticationWithCredentialsRequest.class));
+        verify(authService, Mockito.never()).register(any(RegisterWithCredentialsRequest.class));
     }
 
     @Test

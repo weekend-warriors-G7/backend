@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend.controller;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.AuthenticationWithCredentialsRequest;
+import com.weekendwarriors.weekend_warriors_backend.dto.RegisterWithCredentialsRequest;
 import com.weekendwarriors.weekend_warriors_backend.exception.ExistingUser;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.service.AuthenticationWithCredentialsService;
@@ -33,7 +34,7 @@ public class AuthenticationController {
     private final AuthenticationWithCredentialsService authenticationService;
 
     @Operation(summary = "Register a new user",
-            description = "Creates a new user with the provided credentials (email and password)")
+            description = "Creates a new user with the provided credentials: email, password, firstName and lastName")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201",
                     description = "User registered successfully",
@@ -46,7 +47,7 @@ public class AuthenticationController {
                     content = @Content(schema = @Schema(implementation = String.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody AuthenticationWithCredentialsRequest registerData, BindingResult bindingResult) throws ExistingUser {
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterWithCredentialsRequest registerData, BindingResult bindingResult) throws ExistingUser {
         if (bindingResult.hasErrors()) {
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("error", "Incorrect input");
@@ -65,7 +66,7 @@ public class AuthenticationController {
     }
 
     @Operation(summary = "Log in an existing user",
-            description = "Authenticates a user with the provided credentials (email and password)")
+            description = "Authenticates a user with the provided credentials: email and password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
                     description = "User logged in successfully",

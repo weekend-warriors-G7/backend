@@ -32,6 +32,12 @@ public class User implements UserDetails {
     @Email(message = "Email should be valid")
     private String email;
 
+    @NotBlank(message = "First name required")
+    private String firstName;
+
+    @NotBlank(message = "Last name required")
+    private String lastName;
+
     @NotBlank(message = "Password required")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,64}$",

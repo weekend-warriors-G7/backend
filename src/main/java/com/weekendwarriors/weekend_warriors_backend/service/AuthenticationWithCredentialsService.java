@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend.service;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.AuthenticationWithCredentialsRequest;
+import com.weekendwarriors.weekend_warriors_backend.dto.RegisterWithCredentialsRequest;
 import com.weekendwarriors.weekend_warriors_backend.dto.TokenResponse;
 import com.weekendwarriors.weekend_warriors_backend.enums.JWTTokenType;
 import com.weekendwarriors.weekend_warriors_backend.enums.UserRole;
@@ -26,12 +27,14 @@ public class AuthenticationWithCredentialsService {
     private final JWTBearerService jwtBearerService;
     private final AuthenticationManager authenticationManager;
 
-    public void register(AuthenticationWithCredentialsRequest registerData) throws ExistingUser {
+    public void register(RegisterWithCredentialsRequest registerData) throws ExistingUser {
         if (userRepository.findByEmail(registerData.getEmail()).isPresent())
             throw new ExistingUser("Email already in use");
         User user = User.builder()
                 .email(registerData.getEmail())
                 .password(passwordEncoder.encode(registerData.getPassword()))
+                .firstName(registerData.getFirstName())
+                .lastName(registerData.getLastName())
                 .role(UserRole.BUYER)
                 .build();
         userRepository.save(user);
