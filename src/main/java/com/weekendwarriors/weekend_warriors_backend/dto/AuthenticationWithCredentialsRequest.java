@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 @Data
+@SuperBuilder
 @AllArgsConstructor
 public class AuthenticationWithCredentialsRequest {
     @NotBlank(message = "Email required")
