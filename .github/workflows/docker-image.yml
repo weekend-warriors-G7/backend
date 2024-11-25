@@ -19,11 +19,20 @@ jobs:
           DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
           DATABASE_CONNECTION_STRING: ${{ secrets.DATABASE_CONNECTION_STRING }}
           JWT_SECRET_KEY:  ${{ secrets.JWT_SECRET_KEY }}
+          IMGUR_CLIENT_ID:  ${{ secrets.IMGUR_CLIENT_ID }}
+          IMGUR_CLIENT_SECRET:  ${{ secrets.IMGUR_CLIENT_SECRET }}
+          IMGUR_REFRESH_TOKEN:  ${{ secrets.IMGUR_REFRESH_TOKEN }}
+          SPRING_SERVLET:  ${{ secrets.SPRING_SERVLET }}
+          
         run: |
           # Export secrets as environment variables
           echo "DATABASE_NAME=${DATABASE_NAME}" >> $GITHUB_ENV
           echo "DATABASE_CONNECTION_STRING=${DATABASE_CONNECTION_STRING}" >> $GITHUB_ENV
           echo "JWT_SECRET_KEY=${JWT_SECRET_KEY}" >> $GITHUB_ENV
+          echo "IMGUR_CLIENT_ID=${IMGUR_CLIENT_ID}" >> $GITHUB_ENV
+          echo "IMGUR_CLIENT_SECRET=${IMGUR_CLIENT_SECRET}" >> $GITHUB_ENV
+          echo "IMGUR_REFRESH_TOKEN=${IMGUR_REFRESH_TOKEN}" >> $GITHUB_ENV
+          echo "SPRING_SERVLET=${SPRING_SERVLET}" >> $GITHUB_ENV
 
     
       - name: Check out the repository
