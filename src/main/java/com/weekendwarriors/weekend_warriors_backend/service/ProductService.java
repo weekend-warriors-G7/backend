@@ -18,17 +18,17 @@ import java.util.List;
 
 @Service
 public class ProductService {
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     private final ProductRepository productRepository;
     private ImageManagement imageManagement;
 
     @Autowired
-    public ProductService(ProductRepository productRepository, ImageManagement imageManagement) throws IOException
+    public ProductService(ProductRepository productRepository, ImageManagement imageManagement, MongoTemplate mongoTemplate) throws IOException
     {
         this.productRepository = productRepository;
         this.imageManagement = imageManagement;
+        this.mongoTemplate = mongoTemplate;
     }
 
     public String uploadProductImage(MultipartFile image) throws IOException
