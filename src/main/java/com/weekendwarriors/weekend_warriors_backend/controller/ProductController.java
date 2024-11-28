@@ -4,6 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
 import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -107,6 +115,39 @@ public class ProductController
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    @Operation(
+            summary = "Get products by criteria",
+            description = "Retrieve a list of products filtered by the provided criteria: a range for price, denoted by 'startingPrice' and/or 'endingPrice', 'size', 'material', 'clothingType' and/or 'colour'",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved products"),
+                    @ApiResponse(responseCode = "400", description = "Bad request, invalid parameters"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error"),
+                    @ApiResponse(responseCode = "403", description = "Forbidden, access denied")
+            }
+    )
+    @GetMapping("")
+    public List<Product> getProductsByCriteria(
+            @Parameter(description = "The starting price filter (not mandatory)")
+            @RequestParam(required = false) Double startingPrice,
+
+            @Parameter(description = "The ending price filter (not mandatory)")
+            @RequestParam(required = false) Double endingPrice,
+
+            @Parameter(description = "The size filter (not mandatory)")
+            @RequestParam(required = false) String size,
+
+            @Parameter(description = "The material filter (not mandatory)")
+            @RequestParam(required = false) String material,
+
+            @Parameter(description = "The clothing type filter (not mandatory)")
+            @RequestParam(required = false) String clothingType,
+
+            @Parameter(description = "The color filter (not mandatory)")
+            @RequestParam(required = false) String colour
+    ) throws IOException {
+        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour);
     }
 
     //forbidden

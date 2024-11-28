@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,13 @@ public class GlobalExceptionHandler {
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("error", exception.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String, String>> handleIOException(IOException exception){
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("error", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
     }
 
     @ExceptionHandler(Exception.class)
