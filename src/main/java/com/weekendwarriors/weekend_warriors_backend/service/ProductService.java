@@ -5,6 +5,7 @@ import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -23,6 +24,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private ImageManagement imageManagement;
 
+    ///CONSTRUCTORS!!!
     @Autowired
     public ProductService(ProductRepository productRepository, ImageManagement imageManagement, MongoTemplate mongoTemplate) throws IOException
     {
@@ -31,12 +33,7 @@ public class ProductService {
         this.mongoTemplate = mongoTemplate;
     }
 
-    public String uploadProductImage(MultipartFile image) throws IOException
-    {
-        File tempFile = File.createTempFile("upload-", image.getOriginalFilename());
-        image.transferTo(tempFile);
-        return imageManagement.uploadImageFile(tempFile);
-    }
+    ///EASE OF TRANSFER BETWEEN DTO AND
 
     public Product changeDtoToEntity(ProductDTO productDTO)
     {
@@ -68,6 +65,14 @@ public class ProductService {
             );
     }
 
+    ///CRUD!!!!
+    public String uploadProductImage(MultipartFile image) throws IOException
+    {
+        File tempFile = File.createTempFile("upload-", image.getOriginalFilename());
+        image.transferTo(tempFile);
+        return imageManagement.uploadImageFile(tempFile);
+    }
+
     public ProductDTO addProduct(ProductDTO dto)
     {
         Product product = changeDtoToEntity(dto);
@@ -75,32 +80,17 @@ public class ProductService {
         return ChangeEntityToDto(savedProduct);
     }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void deleteProduct(String id) throws IOException {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-
-        if (product.getImageId() != null)
-        {
-            Boolean deleted = imageManagement.deleteImage(product.getImageId());
-            if (deleted)
-            {
-                productRepository.deleteById(id);
-            }
-            else
-            {
-                throw new RuntimeException("Failed to delete image from Imgur.");
-            }
-        }
-        else
-        {
-            productRepository.deleteById(id);
-        }
+        if(product.getImageId() != null)
+            imageManagement.deleteImage(product.getImageId());
+        productRepository.deleteById(id);
     }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void terminateProducts()
-    {
-        for(Product p : productRepository.findAll())
-            productRepository.deleteById(p.getId());
-    }
+
 
     public ProductDTO updateProduct(String id, ProductDTO dto, MultipartFile image) throws IOException
     {
@@ -108,18 +98,11 @@ public class ProductService {
 
         if (image != null && !image.isEmpty())
         {
-            if (product.getImageId() != null && !product.getImageId().isEmpty())
-            {
-                Boolean deleted = imageManagement.deleteImage(product.getImageId());
-                if (!deleted)
-                {
-                    throw new RuntimeException("Failed to delete old image from Imgur.");
-                }
-            }
+            if(product.getImageId() != null)
+                imageManagement.deleteImage(product.getImageId());
             String newImageId = uploadProductImage(image);
             product.setImageId(newImageId);
         }
-
         product.setName(dto.getName());
         product.setPrice(dto.getPrice());
         product.setDescription(dto.getDescription());
@@ -252,5 +235,34 @@ public class ProductService {
             allProductsWithLinks.add(productWithlink);
         }
         return allProductsWithLinks;
+    }
+
+    public void terminateProducts()
+    {
+        for(Product p : productRepository.findAll())
+            productRepository.deleteById(p.getId());
+    }
+
+    public List<Product> searchProducts(String searchInput) throws IOException {
+        if (searchInput == null || searchInput.trim().isEmpty()) {
+            return getAllProducts();
+        }
+
+        Query nameQuery = new Query(Criteria.where("name").regex(searchInput, "i"));
+        Query descriptionQuery = new Query(Criteria.where("description").regex(searchInput, "i"));
+
+        List<Product> nameMatches = mongoTemplate.find(nameQuery, Product.class);
+        List<String> matchedIds = nameMatches.stream().map(Product::getId).toList();
+
+        if (!matchedIds.isEmpty()) {
+            descriptionQuery.addCriteria(Criteria.where("id").nin(matchedIds));
+        }
+
+        List<Product> descriptionMatches = mongoTemplate.find(descriptionQuery, Product.class);
+
+        List<Product> combinedResults = new ArrayList<>(nameMatches);
+        combinedResults.addAll(descriptionMatches);
+
+        return setImageLinksToProducts(combinedResults);
     }
 }
