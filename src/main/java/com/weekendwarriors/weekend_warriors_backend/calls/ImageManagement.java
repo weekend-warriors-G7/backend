@@ -74,17 +74,21 @@ public class ImageManagement {
     }
 
     public Boolean deleteImage(String imageId) throws IOException {
-        try {
-            webClient.delete()
-                    .uri("https://api.imgur.com/3/image/" + imageId)
-                    .header("Authorization", "Bearer " + this.accessCode)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block();
-            return true;
-        } catch (WebClientResponseException e) {
-            throw new IOException("Failed to delete image: " + e.getResponseBodyAsString(), e);
+        if(imageExists(imageId)) {
+            try {
+                webClient.delete()
+                        .uri("https://api.imgur.com/3/image/" + imageId)
+                        .header("Authorization", "Bearer " + this.accessCode)
+                        .retrieve()
+                        .toBodilessEntity()
+                        .block();
+                return true;
+            } catch (WebClientResponseException e) {
+                throw new IOException("Failed to delete image: " + e.getResponseBodyAsString(), e);
+            }
         }
+        else
+            return false;
     }
 
     public Boolean imageExists(String imageId) throws IOException {
@@ -104,21 +108,10 @@ public class ImageManagement {
     }
 
     public String getImageLink(String imageId) throws IOException {
-//        try {
-//            String response = webClient.get()
-//                    .uri("https://api.imgur.com/3/image/" + imageId)
-//                    .header("Authorization", "Bearer " + this.accessCode)
-//                    .retrieve()
-//                    .bodyToMono(String.class)
-//                    .block();
-//
-//            JSONObject jsonObjectComplete = new JSONObject(response);
-//            JSONObject jsonObject = jsonObjectComplete.getJSONObject("data");
-//            return jsonObject.getString("link");
-//        } catch (WebClientResponseException e) {
-//            throw new IOException("Failed to get image link: " + e.getResponseBodyAsString(), e);
-//        }
-        return "https://i.imgur.com/"+imageId+".jpeg";
+        if(imageExists(imageId))
+            return "https://i.imgur.com/"+imageId+".jpeg";
+        else
+            return "https://i.imgur.com/aUbJ0Tp.jpeg";
     }
 
     public String uploadImageFile(File imageFile) throws IOException {

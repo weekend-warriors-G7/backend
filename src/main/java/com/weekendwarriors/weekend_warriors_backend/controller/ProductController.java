@@ -150,6 +150,27 @@ public class ProductController
         return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour);
     }
 
+    @Operation(
+            summary = "Search products by text",
+            description = "Search products by name or description using a case-insensitive text filter. Name matches appear first, followed by description matches.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully retrieved search results"),
+                    @ApiResponse(responseCode = "400", description = "Invalid search input"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    @GetMapping("/search")
+    public List<Product> searchProducts(
+            @RequestParam String query
+    ) {
+        try {
+            return productService.searchProducts(query);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
     //forbidden
     @DeleteMapping("/final")
     public void terminateProducts()
