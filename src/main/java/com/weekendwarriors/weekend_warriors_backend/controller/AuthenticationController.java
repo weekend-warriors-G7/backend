@@ -74,6 +74,22 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
 
+    @Operation(summary = "Refresh the access and refresh tokens for an authenticated user",
+            description = "Generates new access and refresh tokens using the provided refresh token. If the refresh token is valid, the old refresh token is revoked, and a new one is issued.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "Access and refresh tokens successfully refreshed",
+                    content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+            @ApiResponse(responseCode = "400",
+                    description = "Incorrect input",
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized - Invalid or expired refresh token",
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error - Could not process the token refresh request",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
     @PostMapping("/refresh-token")
     public ResponseEntity<Map<String, TokenResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest refreshToken) throws InvalidToken {
         Map<String, TokenResponse> responseBody = new HashMap<>();
