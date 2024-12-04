@@ -1,9 +1,11 @@
 package com.weekendwarriors.weekend_warriors_backend;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.AuthenticationWithCredentialsRequest;
+import com.weekendwarriors.weekend_warriors_backend.dto.RefreshTokenRequest;
 import com.weekendwarriors.weekend_warriors_backend.dto.RegisterWithCredentialsRequest;
 import com.weekendwarriors.weekend_warriors_backend.dto.TokenResponse;
 import com.weekendwarriors.weekend_warriors_backend.exception.ExistingUser;
+import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.service.AuthenticationWithCredentialsService;
 import org.junit.jupiter.api.AfterEach;
@@ -204,5 +206,48 @@ public class AuthenticationControllerTest {
                 .andExpect(jsonPath("$.error").value("Invalid credentials provided"));
 
         verify(authService).login(any(AuthenticationWithCredentialsRequest.class));
+    }
+
+    @Test
+    public void refreshToken_validRefreshToken_returnsNewTokens() throws Exception {
+        //ARRANGE
+        String validRefreshToken = "valid-refresh-token";
+        String refreshTokenJsonData = "{\"refreshToken\":\"%s\"}".formatted(validRefreshToken);
+        TokenResponse expectedTokens = new TokenResponse("new-access-token", "new-refresh-token");
+
+        Mockito.when(authService.refreshToken(any(RefreshTokenRequest.class)))
+                .thenReturn(expectedTokens);
+
+        //ACT
+        ResultActions result = mockMvc.perform(post("/api/v1/auth/refresh-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(refreshTokenJsonData));
+
+        //ASSERT
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.token.accessToken").value(expectedTokens.getAccessToken()))
+                .andExpect(jsonPath("$.token.refreshToken").value(expectedTokens.getRefreshToken()));
+
+        verify(authService).refreshToken(any(RefreshTokenRequest.class));
+    }
+
+    @Test
+    public void refreshToken_invalidRefreshToken_returnsErrorMessage() throws Exception {
+        //ARRANGE
+        String invalidRefreshToken = "invalid-refresh-token";
+        String refreshTokenJsonData = "{\"refreshToken\":\"%s\"}".formatted(invalidRefreshToken);
+
+        Mockito.doThrow(new InvalidToken("Invalid refresh token")).when(authService).refreshToken(any(RefreshTokenRequest.class));
+
+        //ACT
+        ResultActions result = mockMvc.perform(post("/api/v1/auth/refresh-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(refreshTokenJsonData));
+
+        //ASSERT
+        result.andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Invalid refresh token"));
+
+        verify(authService).refreshToken(any(RefreshTokenRequest.class));
     }
 }
