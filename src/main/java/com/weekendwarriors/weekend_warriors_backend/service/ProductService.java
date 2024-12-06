@@ -60,16 +60,16 @@ public class ProductService {
     public ProductDTO ChangeEntityToDto(Product product)
     {
         return new ProductDTO
-            (
-                product.getName(),
-                product.getPrice(),
-                product.getDescription(),
-                product.getSize(),
-                product.getMaterial(),
-                product.getClothingType(),
-                product.getColour(),
-                product.getImageId()
-            );
+                (
+                        product.getName(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        product.getSize(),
+                        product.getMaterial(),
+                        product.getClothingType(),
+                        product.getColour(),
+                        product.getImageId()
+                );
     }
 
 
@@ -87,15 +87,15 @@ public class ProductService {
         {
             Product productWithlink = new Product
                     (
-                        product.getId(),
-                        product.getName(),
-                        product.getPrice(),
-                        product.getDescription(),
-                        product.getSize(),
-                        product.getMaterial(),
-                        product.getClothingType(),
-                        product.getColour(),
-                        imageManagement.getImageLink(product.getImageId())
+                            product.getId(),
+                            product.getName(),
+                            product.getPrice(),
+                            product.getDescription(),
+                            product.getSize(),
+                            product.getMaterial(),
+                            product.getClothingType(),
+                            product.getColour(),
+                            imageManagement.getImageLink(product.getImageId())
                     );
             allProductsWithLinks.add(productWithlink);
         }
@@ -147,17 +147,17 @@ public class ProductService {
         for(Product product : productRepository.findAll())
         {
             Product productWithlink = new Product
-                (
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    product.getDescription(),
-                    product.getSize(),
-                    product.getMaterial(),
-                    product.getClothingType(),
-                    product.getColour(),
-                    imageManagement.getImageLink(product.getImageId())
-                );
+                    (
+                            product.getId(),
+                            product.getName(),
+                            product.getPrice(),
+                            product.getDescription(),
+                            product.getSize(),
+                            product.getMaterial(),
+                            product.getClothingType(),
+                            product.getColour(),
+                            imageManagement.getImageLink(product.getImageId())
+                    );
             allProductsWithLinks.add(productWithlink);
         }
         return allProductsWithLinks;
@@ -167,71 +167,60 @@ public class ProductService {
     {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         Product productWithlink = new Product
-            (
-                product.getId(),
-                product.getName(),
-                product.getPrice(),
-                product.getDescription(),
-                product.getSize(),
-                product.getMaterial(),
-                product.getClothingType(),
-                product.getColour(),
-                imageManagement.getImageLink(product.getImageId())
-            );
+                (
+                        product.getId(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        product.getSize(),
+                        product.getMaterial(),
+                        product.getClothingType(),
+                        product.getColour(),
+                        imageManagement.getImageLink(product.getImageId())
+                );
         return productWithlink;
     }
 
-    public List<String> getAllProductImageLinks() throws IOException
-    {
-        List<String> imageLinks = new ArrayList<>();
-        for (Product product : productRepository.findAll())
-        {
-            if (product.getImageId() != null && !product.getImageId().isEmpty())
-            {
-                String imageLink = imageManagement.getImageLink(product.getImageId());
-                if (imageLink != null)
-                {
-                    imageLinks.add(imageLink);
-                }
-            }
-        }
-        return imageLinks;
-    }
-
     public List<Product> findProductsByCriteria
-    (
-        Double startingPrice,
-        Double endingPrice,
-        String size,
-        String material,
-        String clothingType,
-        String colour,
-        String searchQuery,
-        String sortType
-    )
-    throws IOException
+            (
+                    Double startingPrice,
+                    Double endingPrice,
+                    String size,
+                    String material,
+                    String clothingType,
+                    String colour,
+                    String searchQuery,
+                    String sortType
+            )
+            throws IOException
     {
         List<Product> filteredProducts = this.findProductsByCriteriaWithoutImageLink(startingPrice, endingPrice, size, material, clothingType, colour);
 
         List<Product> searchedProducts = this.searchProducts(searchQuery);
+        if(searchedProducts!=this.getAllProducts())
+        {
+            Set<String> filteredIds = filteredProducts.stream().map(Product::getId).collect(Collectors.toSet());
+            searchedProducts = searchedProducts.stream()
+                    .filter(product -> filteredIds.contains(product.getId()))
+                    .toList();
 
-        Set<String> filteredIds = filteredProducts.stream().map(Product::getId).collect(Collectors.toSet());
-        searchedProducts = searchedProducts.stream()
-                .filter(product -> filteredIds.contains(product.getId()))
-                .toList();
-
-        return this.sortProductsByPrice(this.setImageLinksToProducts(searchedProducts), sortType);
+            return this.sortProductsByPrice(this.setImageLinksToProducts(searchedProducts), sortType);
+        }
+        else
+        {
+            return this.sortProductsByPrice(this.setImageLinksToProducts(filteredProducts), sortType);
+        }
     }
 
     private List<Product> findProductsByCriteriaWithoutImageLink
-    (
-            Double startingPrice,
-            Double endingPrice,
-            String size,
-            String material,
-            String clothingType,
-            String colour
-    )
+            (
+                    Double startingPrice,
+                    Double endingPrice,
+                    String size,
+                    String material,
+                    String clothingType,
+                    String colour
+            )
     {
         Query query = new Query();
 
@@ -302,17 +291,14 @@ public class ProductService {
         Comparator<Product> comparator;
         if(sortType.trim().equalsIgnoreCase("ascending"))
         {
-            System.out.println("This search is ascending");
             comparator = Comparator.comparing(Product::getPrice);
         }
         else if(sortType.trim().equalsIgnoreCase("descending"))
         {
-            System.out.println("This search is descending");
             comparator = Comparator.comparing(Product::getPrice).reversed();
         }
         else
         {
-            System.out.println("This search is shit");
             return products;
         }
 

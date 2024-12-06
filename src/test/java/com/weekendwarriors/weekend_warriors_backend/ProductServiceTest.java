@@ -2,6 +2,7 @@ package com.weekendwarriors.weekend_warriors_backend;
 
 import com.weekendwarriors.weekend_warriors_backend.calls.ImageManagement;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
+import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ public class ProductServiceTest {
     @Mock
     private ImageManagement imageManagement;
 
+    @Mock
+    private ProductRepository productRepository;
+
     @InjectMocks
     private ProductService productService;
 
@@ -53,8 +57,8 @@ public class ProductServiceTest {
     }
 
     private boolean areTwoListsOfProductsEqual(List<Product> productList1, List<Product> productList2) {
-        for(int i = 0; i < productList1.size(); i++) {
-            if(!areTwoProductsEqual(productList1.get(i), productList2.get(i)))
+        for (int i = 0; i < productList1.size(); i++) {
+            if (!areTwoProductsEqual(productList1.get(i), productList2.get(i)))
                 return false;
         }
         return true;
@@ -64,14 +68,15 @@ public class ProductServiceTest {
     public void findProductsByCriteria_validInput_returnsListOfProducts() throws IOException {
         //ARRANGE
         when(mongoTemplate.find(any(Query.class), eq(Product.class))).thenReturn(mockProductList);
+        when(productRepository.findAll()).thenReturn(mockProductList);
 
         //ACT
-        List<Product> returned_products = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null);
+        List<Product> returnedProducts = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null);
 
         //ASSERT
-        assertNotNull(returned_products);
-        assertEquals(returned_products.size(), mockProductList.size());
-        assertTrue(areTwoListsOfProductsEqual(returned_products, mockProductList));
+        assertNotNull(returnedProducts);
+        assertEquals(returnedProducts.size(), mockProductList.size());
+        assertTrue(areTwoListsOfProductsEqual(returnedProducts, mockProductList));
     }
 
     @Test
@@ -80,7 +85,7 @@ public class ProductServiceTest {
         when(mongoTemplate.find(any(Query.class), eq(Product.class))).thenReturn(List.of());
 
         //ACT
-        List<Product> returned_products = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null);
+        List<Product> returned_products = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null);
 
         //ASSERT
         assertNotNull(returned_products);
