@@ -142,11 +142,11 @@ public class ProductController
             @Parameter(description = "The search query")
             @RequestParam(required = false) String searchQuery,
 
-            @Parameter(description = "The sorting indicator (ascending/descending)")
-            @RequestParam(required = false) String sortIndicator
+            @Parameter(description = "The sorting indicator. If it exists it will indicate that a sort needs to be done; true -> ascending, while false -> descending")
+            @RequestParam(required = false) Boolean sortType
     ) throws IOException
     {
-        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortIndicator);
+        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortType);
     }
 
 

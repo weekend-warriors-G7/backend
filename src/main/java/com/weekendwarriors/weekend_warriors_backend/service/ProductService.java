@@ -190,7 +190,7 @@ public class ProductService {
                     String clothingType,
                     String colour,
                     String searchQuery,
-                    String sortType
+                    Boolean sortType
             )
             throws IOException
     {
@@ -275,25 +275,22 @@ public class ProductService {
         return combinedResults;
     }
 
-    public List<Product> sortProductsByPrice(List<Product> products, String sortType)
+    public List<Product> sortProductsByPrice(List<Product> products, Boolean sortType)
     {
-        for(Product p : products)
-            System.out.println(p.getName() + " " + p.getPrice());
-        System.out.println(sortType);
         if (products == null || products.isEmpty())
         {
             return Collections.emptyList();
         }
 
-        if(sortType == null || sortType.trim().isEmpty())
+        if(sortType == null)
             return products;
 
         Comparator<Product> comparator;
-        if(sortType.trim().equalsIgnoreCase("ascending"))
+        if(sortType)
         {
             comparator = Comparator.comparing(Product::getPrice);
         }
-        else if(sortType.trim().equalsIgnoreCase("descending"))
+        else if(!sortType)
         {
             comparator = Comparator.comparing(Product::getPrice).reversed();
         }
