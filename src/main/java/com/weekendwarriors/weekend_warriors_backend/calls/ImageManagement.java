@@ -111,7 +111,7 @@ public class ImageManagement {
         if(imageExists(imageId))
             return "https://i.imgur.com/"+imageId+".jpeg";
         else
-            return "https://i.imgur.com/aUbJ0Tp.jpeg";
+            return "https://i.imgur.com/YWDk8ZY.jpeg";
     }
 
     public String uploadImageFile(File imageFile) throws IOException {

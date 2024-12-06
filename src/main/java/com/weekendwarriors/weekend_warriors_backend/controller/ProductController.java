@@ -12,13 +12,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -104,19 +109,6 @@ public class ProductController
         }
     }
 
-    @GetMapping("/images")
-    public List<String> getAllProductImageLinks() {
-        try
-        {
-            return productService.getAllProductImageLinks();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-
     @Operation(
             summary = "Get products by criteria",
             description = "Retrieve a list of products filtered by the provided criteria: a range for price, denoted by 'startingPrice' and/or 'endingPrice', 'size', 'material', 'clothingType' and/or 'colour'",
@@ -145,29 +137,46 @@ public class ProductController
             @RequestParam(required = false) String clothingType,
 
             @Parameter(description = "The color filter (not mandatory)")
-            @RequestParam(required = false) String colour
-    ) throws IOException {
-        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour);
+            @RequestParam(required = false) String colour,
+
+            @Parameter(description = "The search query")
+            @RequestParam(required = false) String searchQuery,
+
+            @Parameter(description = "The sorting indicator (ascending/descending)")
+            @RequestParam(required = false) String sortIndicator
+    ) throws IOException
+    {
+        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortIndicator);
     }
 
+
     @Operation(
-            summary = "Search products by text",
-            description = "Search products by name or description using a case-insensitive text filter. Name matches appear first, followed by description matches.",
-            responses = {
+            summary = "Get all products similar to the one on whose page you are now",
+            description = "It gives a list of all products that are similar to the one the user is looking at currently, maybe a loading should be implemented, as it takes a while for the code to get data to the ai and back and then interpret it itself.",
+            responses =
+                {
                     @ApiResponse(responseCode = "200", description = "Successfully retrieved search results"),
-                    @ApiResponse(responseCode = "400", description = "Invalid search input"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
-            }
+                }
     )
-    @GetMapping("/search")
-    public List<Product> searchProducts(
-            @RequestParam String query
-    ) {
+    @GetMapping("/compare/{id}")
+    public List<Product> compareImages
+            (
+                @Parameter(description = "The id of product")
+                @PathVariable String id
+            )
+    {
         try {
-            return productService.searchProducts(query);
+            Product sourceProduct = productService.getProductById(id);
+            if (sourceProduct == null)
+            {
+                throw new RuntimeException("Product with ID " + id + " not found");
+            }
+            return productService.getAllRecommendedImages(id);
+
         } catch (IOException e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            throw new RuntimeException("Failed to compare images: " + e.getMessage());
         }
     }
 

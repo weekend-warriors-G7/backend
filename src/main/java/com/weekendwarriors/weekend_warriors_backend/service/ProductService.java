@@ -4,18 +4,25 @@ import com.weekendwarriors.weekend_warriors_backend.calls.ImageManagement;
 import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.http.HttpHeaders;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -23,8 +30,9 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private ImageManagement imageManagement;
+    private final String defaultImageLink = "https://i.imgur.com/YWDk8ZY.jpeg";
 
-    ///CONSTRUCTORS!!!
+
     @Autowired
     public ProductService(ProductRepository productRepository, ImageManagement imageManagement, MongoTemplate mongoTemplate) throws IOException
     {
@@ -33,7 +41,6 @@ public class ProductService {
         this.mongoTemplate = mongoTemplate;
     }
 
-    ///EASE OF TRANSFER BETWEEN DTO AND
 
     public Product changeDtoToEntity(ProductDTO productDTO)
     {
@@ -65,13 +72,36 @@ public class ProductService {
             );
     }
 
-    ///CRUD!!!!
+
     public String uploadProductImage(MultipartFile image) throws IOException
     {
         File tempFile = File.createTempFile("upload-", image.getOriginalFilename());
         image.transferTo(tempFile);
         return imageManagement.uploadImageFile(tempFile);
     }
+
+    private List<Product> setImageLinksToProducts(List<Product> givenListOfProducts) throws IOException
+    {
+        ArrayList<Product> allProductsWithLinks = new ArrayList<>();
+        for(Product product : givenListOfProducts)
+        {
+            Product productWithlink = new Product
+                    (
+                        product.getId(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getDescription(),
+                        product.getSize(),
+                        product.getMaterial(),
+                        product.getClothingType(),
+                        product.getColour(),
+                        imageManagement.getImageLink(product.getImageId())
+                    );
+            allProductsWithLinks.add(productWithlink);
+        }
+        return allProductsWithLinks;
+    }
+
 
     public ProductDTO addProduct(ProductDTO dto)
     {
@@ -80,17 +110,12 @@ public class ProductService {
         return ChangeEntityToDto(savedProduct);
     }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public void deleteProduct(String id) throws IOException {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
         if(product.getImageId() != null)
             imageManagement.deleteImage(product.getImageId());
         productRepository.deleteById(id);
     }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
     public ProductDTO updateProduct(String id, ProductDTO dto, MultipartFile image) throws IOException
     {
@@ -121,7 +146,8 @@ public class ProductService {
         ArrayList<Product> allProductsWithLinks = new ArrayList<>();
         for(Product product : productRepository.findAll())
         {
-            Product productWithlink = new Product(
+            Product productWithlink = new Product
+                (
                     product.getId(),
                     product.getName(),
                     product.getPrice(),
@@ -131,7 +157,7 @@ public class ProductService {
                     product.getClothingType(),
                     product.getColour(),
                     imageManagement.getImageLink(product.getImageId())
-            );
+                );
             allProductsWithLinks.add(productWithlink);
         }
         return allProductsWithLinks;
@@ -140,7 +166,8 @@ public class ProductService {
     public Product getProductById(String id) throws IOException
     {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-        Product productWithlink = new Product(
+        Product productWithlink = new Product
+            (
                 product.getId(),
                 product.getName(),
                 product.getPrice(),
@@ -150,16 +177,20 @@ public class ProductService {
                 product.getClothingType(),
                 product.getColour(),
                 imageManagement.getImageLink(product.getImageId())
-        );
+            );
         return productWithlink;
     }
 
-    public List<String> getAllProductImageLinks() throws IOException {
+    public List<String> getAllProductImageLinks() throws IOException
+    {
         List<String> imageLinks = new ArrayList<>();
-        for (Product product : productRepository.findAll()) {
-            if (product.getImageId() != null && !product.getImageId().isEmpty()) {
+        for (Product product : productRepository.findAll())
+        {
+            if (product.getImageId() != null && !product.getImageId().isEmpty())
+            {
                 String imageLink = imageManagement.getImageLink(product.getImageId());
-                if (imageLink != null) {
+                if (imageLink != null)
+                {
                     imageLinks.add(imageLink);
                 }
             }
@@ -167,32 +198,41 @@ public class ProductService {
         return imageLinks;
     }
 
-    public List<Product> findProductsByCriteria(
-            Double startingPrice,
-            Double endingPrice,
-            String size,
-            String material,
-            String clothingType,
-            String colour
-    ) throws IOException {
-        return setImageLinksToProducts(findProductsByCriteriaWithoutImageLink(
-                startingPrice,
-                endingPrice,
-                size,
-                material,
-                clothingType,
-                colour
-        ));
+    public List<Product> findProductsByCriteria
+    (
+        Double startingPrice,
+        Double endingPrice,
+        String size,
+        String material,
+        String clothingType,
+        String colour,
+        String searchQuery,
+        String sortType
+    )
+    throws IOException
+    {
+        List<Product> filteredProducts = this.findProductsByCriteriaWithoutImageLink(startingPrice, endingPrice, size, material, clothingType, colour);
+
+        List<Product> searchedProducts = this.searchProducts(searchQuery);
+
+        Set<String> filteredIds = filteredProducts.stream().map(Product::getId).collect(Collectors.toSet());
+        searchedProducts = searchedProducts.stream()
+                .filter(product -> filteredIds.contains(product.getId()))
+                .toList();
+
+        return this.sortProductsByPrice(this.setImageLinksToProducts(searchedProducts), sortType);
     }
 
-    private List<Product> findProductsByCriteriaWithoutImageLink(
+    private List<Product> findProductsByCriteriaWithoutImageLink
+    (
             Double startingPrice,
             Double endingPrice,
             String size,
             String material,
             String clothingType,
             String colour
-    ) {
+    )
+    {
         Query query = new Query();
 
         if(size != null && !size.isEmpty())
@@ -203,12 +243,15 @@ public class ProductService {
             query.addCriteria(Criteria.where("clothingType").is(clothingType));
         if (colour != null && !colour.isEmpty())
             query.addCriteria(Criteria.where("colour").is(colour));
-        if (startingPrice != null || endingPrice != null) {
+        if (startingPrice != null || endingPrice != null)
+        {
             Criteria priceCriteria = Criteria.where("price");
-            if (startingPrice != null) {
+            if (startingPrice != null)
+            {
                 priceCriteria.gte(startingPrice);
             }
-            if (endingPrice != null) {
+            if (endingPrice != null)
+            {
                 priceCriteria.lte(endingPrice);
             }
             query.addCriteria(priceCriteria);
@@ -217,35 +260,11 @@ public class ProductService {
         return mongoTemplate.find(query, Product.class);
     }
 
-    private List<Product> setImageLinksToProducts(List<Product> givenListOfProducts) throws IOException {
-        ArrayList<Product> allProductsWithLinks = new ArrayList<>();
-        for(Product product : givenListOfProducts)
-        {
-            Product productWithlink = new Product(
-                    product.getId(),
-                    product.getName(),
-                    product.getPrice(),
-                    product.getDescription(),
-                    product.getSize(),
-                    product.getMaterial(),
-                    product.getClothingType(),
-                    product.getColour(),
-                    imageManagement.getImageLink(product.getImageId())
-            );
-            allProductsWithLinks.add(productWithlink);
-        }
-        return allProductsWithLinks;
-    }
-
-    public void terminateProducts()
+    public List<Product> searchProducts(String searchInput) throws IOException
     {
-        for(Product p : productRepository.findAll())
-            productRepository.deleteById(p.getId());
-    }
-
-    public List<Product> searchProducts(String searchInput) throws IOException {
-        if (searchInput == null || searchInput.trim().isEmpty()) {
-            return getAllProducts();
+        if (searchInput == null || searchInput.trim().isEmpty())
+        {
+            return this.getAllProducts();
         }
 
         Query nameQuery = new Query(Criteria.where("name").regex(searchInput, "i"));
@@ -254,7 +273,8 @@ public class ProductService {
         List<Product> nameMatches = mongoTemplate.find(nameQuery, Product.class);
         List<String> matchedIds = nameMatches.stream().map(Product::getId).toList();
 
-        if (!matchedIds.isEmpty()) {
+        if (!matchedIds.isEmpty())
+        {
             descriptionQuery.addCriteria(Criteria.where("id").nin(matchedIds));
         }
 
@@ -263,6 +283,117 @@ public class ProductService {
         List<Product> combinedResults = new ArrayList<>(nameMatches);
         combinedResults.addAll(descriptionMatches);
 
-        return setImageLinksToProducts(combinedResults);
+        return combinedResults;
+    }
+
+    public List<Product> sortProductsByPrice(List<Product> products, String sortType)
+    {
+        for(Product p : products)
+            System.out.println(p.getName() + " " + p.getPrice());
+        System.out.println(sortType);
+        if (products == null || products.isEmpty())
+        {
+            return Collections.emptyList();
+        }
+
+        if(sortType == null || sortType.trim().isEmpty())
+            return products;
+
+        Comparator<Product> comparator;
+        if(sortType.trim().equalsIgnoreCase("ascending"))
+        {
+            System.out.println("This search is ascending");
+            comparator = Comparator.comparing(Product::getPrice);
+        }
+        else if(sortType.trim().equalsIgnoreCase("descending"))
+        {
+            System.out.println("This search is descending");
+            comparator = Comparator.comparing(Product::getPrice).reversed();
+        }
+        else
+        {
+            System.out.println("This search is shit");
+            return products;
+        }
+
+        return products.stream()
+                .sorted(comparator)
+                .toList();
+    }
+
+    public List<Product> getAllRecommendedImages(String productImageToCompareToId) throws IOException
+    {
+        try
+        {
+            Map<String, String> ImageLinkToProductIdMapper = new LinkedHashMap<>();
+            List<String> onlyImageLinks = new LinkedList<>();
+            List<String> productsWithDefaultImage = new LinkedList<>();
+
+            for (Product p : this.getAllProducts())
+            {
+                if (!Objects.equals(p.getId(), productImageToCompareToId))
+                {
+                    String id = p.getId();
+                    String imageLink = imageManagement.getImageLink(p.getImageId());
+
+                    if (Objects.equals(imageLink, defaultImageLink)) {
+                        productsWithDefaultImage.add(id);
+                    } else {
+                        ImageLinkToProductIdMapper.put(imageLink, id);
+                    }
+                    onlyImageLinks.add(imageLink);
+                }
+            }
+
+            String imageLinkOfComparisonProduct = imageManagement.getImageLink(productImageToCompareToId);
+
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("source", imageLinkOfComparisonProduct);
+            requestBody.put("others", onlyImageLinks);
+
+            WebClient webClient = WebClient.create();
+            String response = webClient.post()
+                    .uri("http://127.0.0.1:5000/compare")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestBody.toString())
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            JSONArray jsonResponse = new JSONArray(response);
+            List<String> matchedAndSortedImageLinks = jsonResponse.toList().stream()
+                    .map(entry -> ((Map<String, Object>) entry).get("id").toString())
+                    .toList();
+
+            List<Product> matchedProducts = new LinkedList<>();
+            for (String imageLink : matchedAndSortedImageLinks)
+            {
+                if (Objects.equals(imageLink, defaultImageLink))
+                {
+                    String productId = productsWithDefaultImage.getFirst();
+                    Product p = this.getProductById(productId);
+                    matchedProducts.add(p);
+                    productsWithDefaultImage.removeFirst();
+                }
+                else
+                {
+                    String productId = ImageLinkToProductIdMapper.get(imageLink);
+                    Product p = this.getProductById(productId);
+                    matchedProducts.add(p);
+                }
+            }
+            return matchedProducts;
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to compare images: " + e.getMessage());
+        }
+    }
+
+    public void terminateProducts()
+    {
+        for(Product p : productRepository.findAll())
+            productRepository.deleteById(p.getId());
     }
 }
