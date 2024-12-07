@@ -2,15 +2,12 @@ package com.weekendwarriors.weekend_warriors_backend.controller;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.*;
 import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
-import com.weekendwarriors.weekend_warriors_backend.model.User;
 import com.weekendwarriors.weekend_warriors_backend.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,7 +57,7 @@ public class UserController {
     }
 
     @PostMapping("/updateUserFirstName")
-    public ResponseEntity<Map<String, String>> updateUserFirstName(HttpServletRequest request, @RequestBody FirstNameUpdateRequest updateRequest)
+    public ResponseEntity<Map<String, String>> updateUserFirstName(HttpServletRequest request,@Valid @RequestBody FirstNameUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
         String firstName = updateRequest.getFirstName();
@@ -95,7 +92,7 @@ public class UserController {
     }
 
     @PostMapping("/updateUserLastName")
-    public ResponseEntity<Map<String, String>> updateUserLastName(HttpServletRequest request, @RequestBody LastNameUpdateRequest updateRequest)
+    public ResponseEntity<Map<String, String>> updateUserLastName(HttpServletRequest request,@Valid @RequestBody LastNameUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
         String lastName = updateRequest.getLastName();
@@ -130,7 +127,7 @@ public class UserController {
     }
 
     @PostMapping("/updateUserPassword")
-    public ResponseEntity<Map<String, String>> updateUserPassword(HttpServletRequest request, @RequestBody PasswordUpdateRequest updateRequest)
+    public ResponseEntity<Map<String, String>> updateUserPassword(HttpServletRequest request,@Valid @RequestBody PasswordUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
         String oldPassword = updateRequest.getOldPassword();

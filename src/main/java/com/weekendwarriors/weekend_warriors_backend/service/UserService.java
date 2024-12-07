@@ -4,10 +4,7 @@ import com.weekendwarriors.weekend_warriors_backend.dto.UserDTO;
 import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.model.User;
 import com.weekendwarriors.weekend_warriors_backend.repository.UserRepository;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -77,7 +74,6 @@ public class UserService{
     }
 
     public UserDTO updateUserFirstName(String token, String firstName) throws IOException {
-        System.out.println(token);
         String tokenSubject = jwtBearerService.extractSubject(token);
         if (!jwtBearerService.isTokenValid(token, tokenSubject))
             throw new InvalidToken("UserService.updateUserFirstName(), invalid token");
