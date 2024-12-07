@@ -96,4 +96,28 @@ public class AuthenticationController {
         responseBody.put("token", authenticationService.refreshToken(refreshToken));
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
+
+    @Operation(summary = "Logout the authenticated user",
+            description = "Logs out the user by invalidating the provided refresh token. If the refresh token is valid, it will be revoked to prevent further use.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200",
+                    description = "User successfully logged out",
+                    content = @Content(schema = @Schema(implementation = TokenResponse.class))),
+            @ApiResponse(responseCode = "400",
+                    description = "Bad Request - Invalid input",
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "401",
+                    description = "Unauthorized - Invalid or expired refresh token",
+                    content = @Content(schema = @Schema(implementation = Map.class))),
+            @ApiResponse(responseCode = "500",
+                    description = "Internal server error - Could not process the logout request",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody RefreshTokenRequest refreshToken) {
+        Map<String, String> responseBody = new HashMap<>();
+        authenticationService.logout(refreshToken);
+        responseBody.put("message", "Successful logout");
+        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    }
 }
