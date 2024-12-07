@@ -82,4 +82,22 @@ public class AuthenticationWithCredentialsService {
             throw new InvalidToken("Invalid refresh token");
         }
     }
+
+    public void logout(RefreshTokenRequest refreshTokenRequest){
+        String refreshToken = refreshTokenRequest.getRefreshToken();
+        try
+        {
+            String subject = jwtBearerService.extractSubject(refreshToken);
+
+            if (!refreshTokenService.isRefreshTokenValid(refreshToken, subject))
+                throw new InvalidToken("Invalid refresh token");
+
+            Token databaseRefreshToken = refreshTokenService.findByToken(refreshToken)
+                    .orElseThrow(() -> new InvalidToken("Invalid refresh token"));
+            refreshTokenService.revokeToken(databaseRefreshToken);
+        }
+        catch (ExpiredJwtException exception) {
+            throw new InvalidToken("Invalid refresh token");
+        }
+    }
 }

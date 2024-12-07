@@ -96,4 +96,12 @@ public class AuthenticationController {
         responseBody.put("token", authenticationService.refreshToken(refreshToken));
         return ResponseEntity.status(HttpStatus.OK).body(responseBody);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody RefreshTokenRequest refreshToken) {
+        Map<String, String> responseBody = new HashMap<>();
+        authenticationService.logout(refreshToken);
+        responseBody.put("message", "Successful logout");
+        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    }
 }
