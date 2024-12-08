@@ -21,6 +21,7 @@ public class ImageManagement {
     private final String refreshToken;
     private final String accessCode;
     private final WebClient webClient;
+    private final String defaultImageId = "YWDk8ZY";
 
     public ImageManagement(
             @Value("${imgur.client.id}") String clientId,
@@ -108,10 +109,7 @@ public class ImageManagement {
     }
 
     public String getImageLink(String imageId) throws IOException {
-        if(imageExists(imageId))
-            return "https://i.imgur.com/"+imageId+".jpeg";
-        else
-            return "https://i.imgur.com/YWDk8ZY.jpeg";
+        return "https://i.imgur.com/"+imageId+".jpeg";
     }
 
     public String uploadImageFile(File imageFile) throws IOException {
@@ -133,5 +131,10 @@ public class ImageManagement {
         } catch (WebClientResponseException e) {
             throw new IOException("Failed to upload image file: " + e.getResponseBodyAsString(), e);
         }
+    }
+
+    public String provideDefaultImageId()
+    {
+        return defaultImageId;
     }
 }

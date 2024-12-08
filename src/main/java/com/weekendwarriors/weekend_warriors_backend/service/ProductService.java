@@ -7,20 +7,16 @@ import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.http.HttpHeaders;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -371,6 +367,15 @@ public class ProductService {
         {
             e.printStackTrace();
             throw new RuntimeException("Failed to compare images: " + e.getMessage());
+        }
+    }
+
+    public void attemptToUpdateImageIds() throws IOException
+    {
+        for(Product p : productRepository.findAll())
+        {
+            p.setImageId(imageManagement.imageExists(p.getImageId()) ? p.getImageId() : imageManagement.provideDefaultImageId());
+            productRepository.save(p);
         }
     }
 
