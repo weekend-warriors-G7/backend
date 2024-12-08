@@ -197,7 +197,7 @@ public class ProductService {
         List<Product> filteredProducts = this.findProductsByCriteriaWithoutImageLink(startingPrice, endingPrice, size, material, clothingType, colour);
 
         List<Product> searchedProducts = this.searchProducts(searchQuery);
-        if(searchedProducts!=this.getAllProducts())
+        if(searchedProducts!=productRepository.findAll())
         {
             Set<String> filteredIds = filteredProducts.stream().map(Product::getId).collect(Collectors.toSet());
             searchedProducts = searchedProducts.stream()
@@ -253,7 +253,7 @@ public class ProductService {
     {
         if (searchInput == null || searchInput.trim().isEmpty())
         {
-            return this.getAllProducts();
+            return productRepository.findAll();
         }
 
         Query nameQuery = new Query(Criteria.where("name").regex(searchInput, "i"));
