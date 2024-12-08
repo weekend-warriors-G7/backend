@@ -7,23 +7,16 @@ import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/products")
@@ -178,6 +171,12 @@ public class ProductController
             e.printStackTrace();
             throw new RuntimeException("Failed to compare images: " + e.getMessage());
         }
+    }
+
+    @Scheduled(fixedRate = 3600000)
+    @PostConstruct
+    public void checkImageIdsForProducts() throws IOException {
+        productService.attemptToUpdateImageIds();
     }
 
     //forbidden
