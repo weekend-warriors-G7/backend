@@ -308,7 +308,7 @@ public class ProductService {
             List<String> onlyImageLinks = new LinkedList<>();
             List<String> productsWithDefaultImage = new LinkedList<>();
 
-            for (Product p : this.getAllProducts())
+            for (Product p : productRepository.findAll())
             {
                 if (!Objects.equals(p.getId(), productImageToCompareToId))
                 {
@@ -324,7 +324,8 @@ public class ProductService {
                 }
             }
 
-            String imageLinkOfComparisonProduct = imageManagement.getImageLink(productImageToCompareToId);
+
+            String imageLinkOfComparisonProduct = imageManagement.getImageLink(productRepository.findById(productImageToCompareToId).orElse(productRepository.findAll().getFirst()).getImageId());
 
             JSONObject requestBody = new JSONObject();
             requestBody.put("source", imageLinkOfComparisonProduct);
