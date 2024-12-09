@@ -108,7 +108,7 @@ public class ProductService {
 
     public void deleteProduct(String id) throws IOException {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-        if(product.getImageId() != null)
+        if(product.getImageId() != null && product.getImageId() != imageManagement.provideDefaultImageId())
             imageManagement.deleteImage(product.getImageId());
         productRepository.deleteById(id);
     }
