@@ -36,7 +36,7 @@ public class AuthenticationWithCredentialsService {
                 .password(passwordEncoder.encode(registerData.getPassword()))
                 .firstName(registerData.getFirstName())
                 .lastName(registerData.getLastName())
-                .role(UserRole.BUYER)
+                .role(UserRole.USER)
                 .build();
         userRepository.save(user);
     }
