@@ -118,6 +118,8 @@ public class UserService{
         UserDTO userUpdateRequest = new UserDTO();
         userUpdateRequest.setFirstName(userToConvert.getFirstName());
         userUpdateRequest.setLastName(userToConvert.getLastName());
+        userUpdateRequest.setId(userToConvert.getId());
+        userUpdateRequest.setRole(userToConvert.getRole().toString());
         userUpdateRequest.setEmail(userToConvert.getEmail());
         return userUpdateRequest;
     }

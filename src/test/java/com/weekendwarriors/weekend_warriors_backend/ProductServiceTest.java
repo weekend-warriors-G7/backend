@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend;
 
 import com.weekendwarriors.weekend_warriors_backend.calls.ImageManagement;
+import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
@@ -40,9 +41,9 @@ public class ProductServiceTest {
     @BeforeEach
     void setUp() {
         mockProductList = new ArrayList<>();
-        mockProductList.add(new Product("1", "Blue shirt", 24.9, "Blue cotton shirt", "M", "Cotton", "Casual", "Blue", "imageId1"));
-        mockProductList.add(new Product("2", "Fancy Pants", 40.0, "Denim fancy pants", "L", "Denim", "Formal", "Black", "imageId2"));
-        mockProductList.add(new Product("3", "Skirt", 38.99, "Simple skirt", "S", "Denim", "Formal", "Black", "imageId3"));
+        mockProductList.add(new Product("1", "Blue shirt", 24.9, "Blue cotton shirt", "M", "Cotton", "Casual", "Blue", "imageId1", ProductStatus.PENDING));
+        mockProductList.add(new Product("2", "Fancy Pants", 40.0, "Denim fancy pants", "L", "Denim", "Formal", "Black", "imageId2",ProductStatus.PENDING));
+        mockProductList.add(new Product("3", "Skirt", 38.99, "Simple skirt", "S", "Denim", "Formal", "Black", "imageId3",ProductStatus.PENDING));
     }
 
     private boolean areTwoProductsEqual(Product product1, Product product2) {
@@ -71,7 +72,7 @@ public class ProductServiceTest {
         when(productRepository.findAll()).thenReturn(mockProductList);
 
         //ACT
-        List<Product> returnedProducts = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null);
+        List<Product> returnedProducts = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null,"");
 
         //ASSERT
         assertNotNull(returnedProducts);
@@ -85,7 +86,7 @@ public class ProductServiceTest {
         when(mongoTemplate.find(any(Query.class), eq(Product.class))).thenReturn(List.of());
 
         //ACT
-        List<Product> returned_products = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null);
+        List<Product> returned_products = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null,"");
 
         //ASSERT
         assertNotNull(returned_products);

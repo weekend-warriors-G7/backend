@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/v1/user")
 
 public class UserController {
     UserService userService;
@@ -22,7 +22,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/getUserDetails")
+    @GetMapping("/")
     public ResponseEntity<Map<String, String>> getUser(HttpServletRequest request)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
@@ -42,6 +42,9 @@ public class UserController {
         try
         {
             user = userService.getUser(token);
+            jsonResponseMap.put("email", user.getEmail());
+            jsonResponseMap.put("firstName", user.getFirstName());
+            jsonResponseMap.put("lastName",  user.getLastName());
         }
         catch (Exception exception)
         {
@@ -49,14 +52,77 @@ public class UserController {
             return ResponseEntity.badRequest().body(jsonResponseMap);
         }
 
-        jsonResponseMap.put("email", user.getEmail());
-        jsonResponseMap.put("firstName", user.getFirstName());
-        jsonResponseMap.put("lastName",  user.getLastName());
+
 
         return ResponseEntity.ok(jsonResponseMap);
     }
 
-    @PostMapping("/updateUserFirstName")
+    @GetMapping("/role")
+    public ResponseEntity<Map<String, String>> getUserRole(HttpServletRequest request)
+    {
+        HashMap<String, String> jsonResponseMap = new HashMap<>();
+        String token;
+        UserDTO user;
+
+        try
+        {
+            token = userService.getJwtTokenFromRequest(request);
+        }
+        catch (InvalidToken invalidToken)
+        {
+            jsonResponseMap.put("invalid request header", invalidToken.getMessage());
+            return ResponseEntity.badRequest().body(jsonResponseMap);
+        }
+
+        try
+        {
+            user = userService.getUser(token);
+
+            jsonResponseMap.put("role", user.getRole());
+        }
+        catch (Exception exception)
+        {
+            jsonResponseMap.put("error", exception.getMessage());
+            return ResponseEntity.badRequest().body(jsonResponseMap);
+        }
+
+        return ResponseEntity.ok(jsonResponseMap);
+    }
+
+    @GetMapping("/id")
+    public ResponseEntity<Map<String, String>> getUserId(HttpServletRequest request)
+    {
+        HashMap<String, String> jsonResponseMap = new HashMap<>();
+        String token;
+        UserDTO user;
+
+        try
+        {
+            token = userService.getJwtTokenFromRequest(request);
+        }
+        catch (InvalidToken invalidToken)
+        {
+            jsonResponseMap.put("invalid request header", invalidToken.getMessage());
+            return ResponseEntity.badRequest().body(jsonResponseMap);
+        }
+
+        try
+        {
+            user = userService.getUser(token);
+
+            jsonResponseMap.put("id", user.getId());
+        }
+        catch (Exception exception)
+        {
+            jsonResponseMap.put("error", exception.getMessage());
+            return ResponseEntity.badRequest().body(jsonResponseMap);
+        }
+
+        return ResponseEntity.ok(jsonResponseMap);
+    }
+
+
+    @PutMapping("/updateUserFirstName")
     public ResponseEntity<Map<String, String>> updateUserFirstName(HttpServletRequest request,@Valid @RequestBody FirstNameUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
@@ -91,7 +157,7 @@ public class UserController {
         return ResponseEntity.ok(jsonResponseMap);
     }
 
-    @PostMapping("/updateUserLastName")
+    @PutMapping("/updateUserLastName")
     public ResponseEntity<Map<String, String>> updateUserLastName(HttpServletRequest request,@Valid @RequestBody LastNameUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();
@@ -126,7 +192,7 @@ public class UserController {
         return ResponseEntity.ok(jsonResponseMap);
     }
 
-    @PostMapping("/updateUserPassword")
+    @PutMapping("/updateUserPassword")
     public ResponseEntity<Map<String, String>> updateUserPassword(HttpServletRequest request,@Valid @RequestBody PasswordUpdateRequest updateRequest)
     {
         HashMap<String, String> jsonResponseMap = new HashMap<>();

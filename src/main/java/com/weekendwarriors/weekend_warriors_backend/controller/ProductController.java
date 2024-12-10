@@ -1,33 +1,43 @@
 package com.weekendwarriors.weekend_warriors_backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.weekendwarriors.weekend_warriors_backend.dto.UserDTO;
+import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
+import com.weekendwarriors.weekend_warriors_backend.enums.UserRole;
+import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
 import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
 
+import com.weekendwarriors.weekend_warriors_backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/products")
 public class ProductController
 {
     private final ProductService productService;
+    private final UserService userService;
 
     @Autowired
-    public ProductController(ProductService productService)
+    public ProductController(ProductService productService, UserService userService)
     {
         this.productService = productService;
+        this.userService = userService;
     }
 
     @GetMapping("/all")
@@ -56,21 +66,83 @@ public class ProductController
         }
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<?> getProductsOwnedByUser(HttpServletRequest request) {
+        try {
+            // Extract the token from the request
+            String token = userService.getJwtTokenFromRequest(request);
+
+            // Validate the token and retrieve the user information
+            UserDTO user = userService.getUser(token);
+
+
+
+            // Fetch the products owned by the user
+            List<Product> products = productService.getProductsOwnedByUser(user.getId());
+            Map<String, List<Product>> categorizedProducts = new HashMap<>();
+
+            categorizedProducts.put("Approved", new ArrayList<>());
+            categorizedProducts.put("Pending", new ArrayList<>());
+            categorizedProducts.put("Rejected", new ArrayList<>());
+
+            for (Product product : products) {
+                switch (product.getStatus()) {
+                    case ProductStatus.APROVED:
+                        categorizedProducts.get("Approved").add(product);
+                        break;
+                    case ProductStatus.PENDING:
+                        categorizedProducts.get("Pending").add(product);
+                        break;
+                    case ProductStatus.REJECTED:
+                        categorizedProducts.get("Rejected").add(product);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            // Return the products in the response
+            return ResponseEntity.ok(categorizedProducts);
+        } catch (InvalidToken invalidToken) {
+            // Handle token validation errors
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", invalidToken.getMessage()));
+        } catch (IOException e) {
+            // Handle other exceptions
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "An error occurred while processing the request."));
+        }
+    }
+
+
+
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
-    public ProductDTO addProduct( @RequestPart("product") String productJson, @RequestPart("image") MultipartFile image)
+    public ResponseEntity<?> addProduct( @RequestPart("product") String productJson, @RequestPart("image") MultipartFile image,HttpServletRequest request)
     {
         try
         {
+            String token = userService.getJwtTokenFromRequest(request);
+
+            // Validate the token and retrieve the user information
+            UserDTO user = userService.getUser(token);
+
             ObjectMapper objectMapper = new ObjectMapper();
             ProductDTO productDTO = objectMapper.readValue(productJson, ProductDTO.class);
             String imageId = productService.uploadProductImage(image);
             productDTO.setImageId(imageId);
-            return productService.addProduct(productDTO);
-        }
-        catch(IOException e)
-        {
+            productDTO.setOwner_id(user.getId());
+            productDTO.setStatus(ProductStatus.PENDING);
+           ProductDTO productAdded = productService.addProduct(productDTO);
+            return ResponseEntity.ok(productAdded);
+        } catch (InvalidToken invalidToken) {
+            // Handle token validation errors
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.singletonMap("error", invalidToken.getMessage()));
+        } catch (IOException e) {
+            // Handle other exceptions
             e.printStackTrace();
-            return null;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "An error occurred while processing the request."));
         }
     }
 
@@ -136,10 +208,13 @@ public class ProductController
             @RequestParam(required = false) String searchQuery,
 
             @Parameter(description = "The sorting indicator. If it exists it will indicate that a sort needs to be done; true -> ascending, while false -> descending")
-            @RequestParam(required = false) Boolean sortType
+            @RequestParam(required = false) Boolean sortType,
+
+            @Parameter(description = "The product status")
+            @RequestParam(required = false) String status
     ) throws IOException
     {
-        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortType);
+        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortType, status);
     }
 
 
