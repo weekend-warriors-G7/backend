@@ -41,20 +41,22 @@ public class ProductServiceTest {
     @BeforeEach
     void setUp() {
         mockProductList = new ArrayList<>();
-        mockProductList.add(new Product("1", "Blue shirt", 24.9, "Blue cotton shirt", "M", "Cotton", "Casual", "Blue", "imageId1", ProductStatus.PENDING));
-        mockProductList.add(new Product("2", "Fancy Pants", 40.0, "Denim fancy pants", "L", "Denim", "Formal", "Black", "imageId2",ProductStatus.PENDING));
-        mockProductList.add(new Product("3", "Skirt", 38.99, "Simple skirt", "S", "Denim", "Formal", "Black", "imageId3",ProductStatus.PENDING));
+        mockProductList.add(new Product("0","1", "Blue shirt", 24.9, "Blue cotton shirt", "M", "Cotton", "Casual", "Blue", "imageId1", ProductStatus.PENDING));
+        mockProductList.add(new Product("0","2", "Fancy Pants", 40.0, "Denim fancy pants", "L", "Denim", "Formal", "Black", "imageId2",ProductStatus.PENDING));
+        mockProductList.add(new Product("0","3", "Skirt", 38.99, "Simple skirt", "S", "Denim", "Formal", "Black", "imageId3",ProductStatus.PENDING));
     }
 
     private boolean areTwoProductsEqual(Product product1, Product product2) {
         return product1.getId().equals(product2.getId()) &&
+                product1.getOwner_id().equals(product2.getOwner_id()) &&
                 product1.getName().equals(product2.getName()) &&
                 product1.getPrice().equals(product2.getPrice()) &&
                 product1.getDescription().equals(product2.getDescription()) &&
                 product1.getSize().equals(product2.getSize()) &&
                 product1.getMaterial().equals(product2.getMaterial()) &&
                 product1.getClothingType().equals(product2.getClothingType()) &&
-                product1.getColour().equals(product2.getColour());
+                product1.getColour().equals(product2.getColour())&&
+                product1.getStatus().equals(product2.getStatus());
     }
 
     private boolean areTwoListsOfProductsEqual(List<Product> productList1, List<Product> productList2) {
@@ -72,7 +74,7 @@ public class ProductServiceTest {
         when(productRepository.findAll()).thenReturn(mockProductList);
 
         //ACT
-        List<Product> returnedProducts = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null,"");
+        List<Product> returnedProducts = productService.findProductsByCriteria(20.0, 50.0, null, null, null, null, null, null,ProductStatus.PENDING.toString());
 
         //ASSERT
         assertNotNull(returnedProducts);
