@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,8 +25,8 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrdersForCurrentUser());
     }
 
-    @GetMapping("/top-10")
-    public ResponseEntity<List<OrderedProduct>> getTop10OrderedProducts() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTop10MostOrderedProducts());
+    @GetMapping("/top")
+    public ResponseEntity<List<OrderedProduct>> getTopOrderedProducts(@RequestParam(defaultValue = "10") int n) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTopMostOrderedProducts(n));
     }
 }

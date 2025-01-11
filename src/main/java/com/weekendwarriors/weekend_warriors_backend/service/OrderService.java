@@ -66,12 +66,12 @@ public class OrderService {
         throw new NotAuthenticated("Not authenticated");
     }
 
-    public List<OrderedProduct> getTop10MostOrderedProducts() {
+    public List<OrderedProduct> getTopMostOrderedProducts(int n) {
         Aggregation aggregation = Aggregation.newAggregation(
                 Aggregation.group("product.$id")
                         .count().as("orderCount"),
                 Aggregation.sort(Sort.by(Sort.Direction.DESC, "orderCount")),
-                Aggregation.limit(10),
+                Aggregation.limit(n),
                 Aggregation.lookup("products", "_id", "_id", "productDetails"),
                 Aggregation.unwind("productDetails"),
                 Aggregation.project("orderCount").and("productDetails").as("product")
