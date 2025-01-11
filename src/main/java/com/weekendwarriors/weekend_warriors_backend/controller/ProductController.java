@@ -87,13 +87,13 @@ public class ProductController
 
             for (Product product : products) {
                 switch (product.getStatus()) {
-                    case ProductStatus.APROVED:
+                    case APROVED:
                         categorizedProducts.get("Approved").add(product);
                         break;
-                    case ProductStatus.PENDING:
+                    case PENDING:
                         categorizedProducts.get("Pending").add(product);
                         break;
-                    case ProductStatus.REJECTED:
+                    case REJECTED:
                         categorizedProducts.get("Rejected").add(product);
                         break;
                     default:

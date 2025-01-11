@@ -215,8 +215,7 @@ public class ProductService {
         {
             Set<String> filteredIds = filteredProducts.stream().map(Product::getId).collect(Collectors.toSet());
             searchedProducts = searchedProducts.stream()
-                    .filter(product -> filteredIds.contains(product.getId()))
-                    .toList();
+                    .filter(product -> filteredIds.contains(product.getId())).collect(Collectors.toList());
 
             return this.sortProductsByPrice(this.setImageLinksToProducts(searchedProducts), sortType);
         }
@@ -277,7 +276,7 @@ public class ProductService {
         Query descriptionQuery = new Query(Criteria.where("description").regex(searchInput, "i"));
 
         List<Product> nameMatches = mongoTemplate.find(nameQuery, Product.class);
-        List<String> matchedIds = nameMatches.stream().map(Product::getId).toList();
+        List<String> matchedIds = nameMatches.stream().map(Product::getId).collect(Collectors.toList());
 
         if (!matchedIds.isEmpty())
         {
@@ -318,7 +317,7 @@ public class ProductService {
 
         return products.stream()
                 .sorted(comparator)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public List<Product> getAllRecommendedImages(String productImageToCompareToId) throws IOException
@@ -331,7 +330,7 @@ public class ProductService {
 
             for (Product p : productRepository.findAll())
             {
-                if (!Objects.equals(p.getId(), productImageToCompareToId))
+                if (!Objects.equals(p.getId(), productImageToCompareToId) && Objects.equals(p.getStatus(),ProductStatus.APROVED))
                 {
                     String id = p.getId();
                     String imageLink = imageManagement.getImageLink(p.getImageId());
@@ -364,7 +363,7 @@ public class ProductService {
             JSONArray jsonResponse = new JSONArray(response);
             List<String> matchedAndSortedImageLinks = jsonResponse.toList().stream()
                     .map(entry -> ((Map<String, Object>) entry).get("id").toString())
-                    .toList();
+                    .collect(Collectors.toList());
 
             List<Product> matchedProducts = new LinkedList<>();
             for (String imageLink : matchedAndSortedImageLinks)
