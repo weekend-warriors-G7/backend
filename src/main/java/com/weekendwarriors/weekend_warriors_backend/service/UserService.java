@@ -49,6 +49,27 @@ public class UserService{
         return userToDto(retrievedUser);
     }
 
+    public UserDTO getUserById(String id) throws IOException
+    {
+        User retrievedUser = userRepository.findById(id).orElse(null);
+
+        if (retrievedUser == null)
+            throw new IOException("UserService.getUserById(), database error, user not found");
+
+        return userToDto(retrievedUser);
+    }
+
+    public String getUserId(String token) throws InvalidToken, IOException
+    {
+        String tokenSubject = jwtBearerService.extractSubject(token);
+        if (!jwtBearerService.isTokenValid(token, tokenSubject))
+            throw new InvalidToken("UserService.getUser(), invalid token");
+        User retrievedUser = userRepository.findById(tokenSubject).orElse(null);
+        if (retrievedUser == null)
+            throw new IOException("UserService.getUserId(), database error, user not found");
+        return retrievedUser.getId();
+    }
+
     public UserDTO updateUserPassword(String token, String oldPassword, String newPassword) throws IOException {
         String tokenSubject = jwtBearerService.extractSubject(token);
         if (!jwtBearerService.isTokenValid(token, tokenSubject))
