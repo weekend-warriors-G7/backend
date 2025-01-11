@@ -55,8 +55,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
     }
 
+    @ExceptionHandler(NotAuthenticated.class)
+    public ResponseEntity<Map<String, Object>> handleNotAuthenticatedErrors(NotAuthenticated exception) {
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("error", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+    }
+
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, String>> handleIOException(IOException exception){
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("error", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException exception){
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("error", exception.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
