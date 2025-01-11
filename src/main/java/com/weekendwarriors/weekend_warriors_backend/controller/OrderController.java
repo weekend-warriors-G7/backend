@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend.controller;
 
 import com.weekendwarriors.weekend_warriors_backend.dto.OrderDTO;
+import com.weekendwarriors.weekend_warriors_backend.dto.OrderedProduct;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -21,5 +22,10 @@ public class OrderController {
     @GetMapping("")
     public ResponseEntity<List<OrderDTO>> getOrdersForUser() throws UserNotFound {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrdersForCurrentUser());
+    }
+
+    @GetMapping("/top-10")
+    public ResponseEntity<List<OrderedProduct>> getTop10OrderedProducts() {
+        return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTop10MostOrderedProducts());
     }
 }
