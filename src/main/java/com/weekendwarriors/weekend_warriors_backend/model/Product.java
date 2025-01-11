@@ -17,7 +17,7 @@ public class Product
 {
     @Id
     private String id;
-    private String owner_id;
+    private String sellerId;
     private String name;
     private Double price;
     private String description;
@@ -28,9 +28,9 @@ public class Product
     private String imageId;
     private ProductStatus status;
 
-    public Product(String owner_id, String name, Double price, String description, String size, String material, String clothingType, String colour, String imageId, ProductStatus status)
+    public Product(String sellerId, String name, Double price, String description, String size, String material, String clothingType, String colour, String imageId, ProductStatus status)
     {
-        this.owner_id = owner_id;
+        this.sellerId = sellerId;
         this.name = name;
         this.price = price;
         this.description = description;

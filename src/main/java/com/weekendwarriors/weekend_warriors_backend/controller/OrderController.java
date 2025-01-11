@@ -1,6 +1,7 @@
 package com.weekendwarriors.weekend_warriors_backend.controller;
 
-import com.weekendwarriors.weekend_warriors_backend.dto.OrderDTO;
+import com.weekendwarriors.weekend_warriors_backend.dto.OrderForBuyerDTO;
+import com.weekendwarriors.weekend_warriors_backend.dto.OrderForSellerDTO;
 import com.weekendwarriors.weekend_warriors_backend.dto.OrderedProduct;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.service.OrderService;
@@ -21,12 +22,17 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping("")
-    public ResponseEntity<List<OrderDTO>> getOrdersForUser() throws UserNotFound {
+    public ResponseEntity<List<OrderForBuyerDTO>> getOrdersForUser() throws UserNotFound {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrdersForCurrentUser());
     }
 
     @GetMapping("/top")
     public ResponseEntity<List<OrderedProduct>> getTopOrderedProducts(@RequestParam(defaultValue = "10") int n) {
         return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTopMostOrderedProducts(n));
+    }
+
+    @GetMapping("/sold")
+    public ResponseEntity<List<OrderForSellerDTO>> getSoldOrderedProducts() throws UserNotFound {
+        return ResponseEntity.status(HttpStatus.OK).body(orderService.getOrdersPlacedByOtherUsersForProductsSoldByCurrentUser());
     }
 }

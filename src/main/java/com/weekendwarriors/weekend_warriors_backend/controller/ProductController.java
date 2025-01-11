@@ -3,7 +3,6 @@ package com.weekendwarriors.weekend_warriors_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weekendwarriors.weekend_warriors_backend.dto.UserDTO;
 import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
-import com.weekendwarriors.weekend_warriors_backend.enums.UserRole;
 import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
@@ -130,7 +129,7 @@ public class ProductController
             ProductDTO productDTO = objectMapper.readValue(productJson, ProductDTO.class);
             String imageId = productService.uploadProductImage(image);
             productDTO.setImageId(imageId);
-            productDTO.setOwner_id(user.getId());
+            productDTO.setSellerId(user.getId());
             productDTO.setStatus(ProductStatus.PENDING);
            ProductDTO productAdded = productService.addProduct(productDTO);
             return ResponseEntity.ok(productAdded);

@@ -48,7 +48,7 @@ public class ProductServiceTest {
 
     private boolean areTwoProductsEqual(Product product1, Product product2) {
         return product1.getId().equals(product2.getId()) &&
-                product1.getOwner_id().equals(product2.getOwner_id()) &&
+                product1.getSellerId().equals(product2.getSellerId()) &&
                 product1.getName().equals(product2.getName()) &&
                 product1.getPrice().equals(product2.getPrice()) &&
                 product1.getDescription().equals(product2.getDescription()) &&

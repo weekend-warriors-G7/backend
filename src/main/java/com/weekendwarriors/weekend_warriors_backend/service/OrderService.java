@@ -1,10 +1,12 @@
 package com.weekendwarriors.weekend_warriors_backend.service;
 
 import com.weekendwarriors.weekend_warriors_backend.calls.ImageManagement;
-import com.weekendwarriors.weekend_warriors_backend.dto.OrderDTO;
+import com.weekendwarriors.weekend_warriors_backend.dto.OrderForBuyerDTO;
+import com.weekendwarriors.weekend_warriors_backend.dto.OrderForSellerDTO;
 import com.weekendwarriors.weekend_warriors_backend.dto.OrderedProduct;
 import com.weekendwarriors.weekend_warriors_backend.exception.NotAuthenticated;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
+import com.weekendwarriors.weekend_warriors_backend.model.Order;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.model.User;
 import com.weekendwarriors.weekend_warriors_backend.repository.OrderRepository;
@@ -33,19 +35,41 @@ public class OrderService {
         this.mongoTemplate = mongoTemplate;
     }
 
-    public List<OrderDTO> getAllOrdersForCurrentUser() throws UserNotFound, NotAuthenticated {
+    public List<OrderForBuyerDTO> getAllOrdersForCurrentUser() throws UserNotFound, NotAuthenticated {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             String userEmail = authentication.getName();
             User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new UserNotFound("Invalid email"));
-            return orderRepository.findByUserId(user.getId()).stream().map(order -> {
-                try {
-                    return new OrderDTO(
+            return returnListOfOrderAsListOfOrderForBuyerDTOs(orderRepository.findByUserId(user.getId()));
+        }
+        throw new NotAuthenticated("Not authenticated");
+    }
+
+    public List<OrderForSellerDTO> getOrdersPlacedByOtherUsersForProductsSoldByCurrentUser() throws UserNotFound {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String userEmail = authentication.getName();
+            User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new UserNotFound("Invalid email"));
+            List<Order> orders = orderRepository.findByUserIdNot(user.getId());
+            List<Order> filteredOrders = orders.stream()
+                    .filter(order -> user.getId().equals(order.getProduct().getSellerId()))
+                    .toList();
+            return returnListOfOrderAsListOfOrderForSellerDTOs(filteredOrders);
+        }
+        throw new NotAuthenticated("Not authenticated");
+    }
+
+    private List<OrderForBuyerDTO> returnListOfOrderAsListOfOrderForBuyerDTOs(List<Order> orders) {
+        return orders.stream()
+                .map(order -> {
+                    try {
+                        return new OrderForBuyerDTO(
                             order.getId(),
+                            userRepository.findById(order.getProduct().getSellerId()).get().getEmail(),
                             new Product
                             (
                                     order.getProduct().getId(),
-                                    order.getProduct().getOwner_id(),
+                                    order.getProduct().getSellerId(),
                                     order.getProduct().getName(),
                                     order.getProduct().getPrice(),
                                     order.getProduct().getDescription(),
@@ -57,13 +81,40 @@ public class OrderService {
                                     order.getProduct().getStatus()
                             ),
                             order.getOrderDate()
-                            );
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to process order due to image link retrieval issue", e);
-                }
-            }).toList();
-        }
-        throw new NotAuthenticated("Not authenticated");
+                        );
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to process order due to image link retrieval issue", e);
+                    }
+                }).toList();
+    }
+
+    private List<OrderForSellerDTO> returnListOfOrderAsListOfOrderForSellerDTOs(List<Order> orders) {
+        return orders.stream()
+                .map(order -> {
+                    try {
+                        return new OrderForSellerDTO(
+                                order.getId(),
+                                order.getUser().getEmail(),
+                                new Product
+                                        (
+                                                order.getProduct().getId(),
+                                                order.getProduct().getSellerId(),
+                                                order.getProduct().getName(),
+                                                order.getProduct().getPrice(),
+                                                order.getProduct().getDescription(),
+                                                order.getProduct().getSize(),
+                                                order.getProduct().getMaterial(),
+                                                order.getProduct().getClothingType(),
+                                                order.getProduct().getColour(),
+                                                imageManagement.getImageLink(order.getProduct().getImageId()),
+                                                order.getProduct().getStatus()
+                                        ),
+                                order.getOrderDate()
+                        );
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to process order due to image link retrieval issue", e);
+                    }
+                }).toList();
     }
 
     public List<OrderedProduct> getTopMostOrderedProducts(int n) {

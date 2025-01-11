@@ -8,8 +8,9 @@ import java.util.Date;
 
 @Data
 @AllArgsConstructor
-public class OrderDTO {
+public class OrderForBuyerDTO {
     private String id;
+    private String sellerEmail;
     private Product product;
     private Date orderDate;
 }
