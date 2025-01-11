@@ -6,9 +6,14 @@ import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
 import com.weekendwarriors.weekend_warriors_backend.enums.UserRole;
 import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
+import com.weekendwarriors.weekend_warriors_backend.model.SearchDTO;
+import com.weekendwarriors.weekend_warriors_backend.model.UserSearch;
 import com.weekendwarriors.weekend_warriors_backend.service.ProductService;
 import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
+import com.weekendwarriors.weekend_warriors_backend.model.Search;
 
+import com.weekendwarriors.weekend_warriors_backend.service.SearchService;
+import com.weekendwarriors.weekend_warriors_backend.service.UserSearchService;
 import com.weekendwarriors.weekend_warriors_backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,12 +37,16 @@ public class ProductController
 {
     private final ProductService productService;
     private final UserService userService;
+    private  final UserSearchService userSearchService;
+    private final SearchService searchService;
 
     @Autowired
-    public ProductController(ProductService productService, UserService userService)
+    public ProductController(ProductService productService, UserService userService, UserSearchService userSearchService, SearchService searchService)
     {
         this.productService = productService;
         this.userService = userService;
+        this.userSearchService = userSearchService;
+        this.searchService = searchService;
     }
 
     @GetMapping("/all")
@@ -67,17 +76,14 @@ public class ProductController
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getProductsOwnedByUser(HttpServletRequest request) {
-        try {
-            // Extract the token from the request
+    public ResponseEntity<?> getProductsOwnedByUser(HttpServletRequest request)
+    {
+        try
+        {
             String token = userService.getJwtTokenFromRequest(request);
 
-            // Validate the token and retrieve the user information
             UserDTO user = userService.getUser(token);
 
-
-
-            // Fetch the products owned by the user
             List<Product> products = productService.getProductsOwnedByUser(user.getId());
             Map<String, List<Product>> categorizedProducts = new HashMap<>();
 
@@ -85,8 +91,10 @@ public class ProductController
             categorizedProducts.put("Pending", new ArrayList<>());
             categorizedProducts.put("Rejected", new ArrayList<>());
 
-            for (Product product : products) {
-                switch (product.getStatus()) {
+            for (Product product : products)
+            {
+                switch (product.getStatus())
+                {
                     case APROVED:
                         categorizedProducts.get("Approved").add(product);
                         break;
@@ -100,14 +108,15 @@ public class ProductController
                         break;
                 }
             }
-            // Return the products in the response
             return ResponseEntity.ok(categorizedProducts);
-        } catch (InvalidToken invalidToken) {
-            // Handle token validation errors
+        }
+        catch (InvalidToken invalidToken)
+        {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", invalidToken.getMessage()));
-        } catch (IOException e) {
-            // Handle other exceptions
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", "An error occurred while processing the request."));
@@ -115,15 +124,13 @@ public class ProductController
     }
 
 
-
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> addProduct( @RequestPart("product") String productJson, @RequestPart("image") MultipartFile image,HttpServletRequest request)
+    public ResponseEntity<?> addProduct( @RequestPart("product") String productJson, @RequestPart("image") MultipartFile image, HttpServletRequest request)
     {
         try
         {
             String token = userService.getJwtTokenFromRequest(request);
 
-            // Validate the token and retrieve the user information
             UserDTO user = userService.getUser(token);
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -132,14 +139,16 @@ public class ProductController
             productDTO.setImageId(imageId);
             productDTO.setOwner_id(user.getId());
             productDTO.setStatus(ProductStatus.PENDING);
-           ProductDTO productAdded = productService.addProduct(productDTO);
+            ProductDTO productAdded = productService.addProduct(productDTO);
             return ResponseEntity.ok(productAdded);
-        } catch (InvalidToken invalidToken) {
-            // Handle token validation errors
+        }
+        catch (InvalidToken invalidToken)
+        {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", invalidToken.getMessage()));
-        } catch (IOException e) {
-            // Handle other exceptions
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", "An error occurred while processing the request."));
@@ -211,10 +220,47 @@ public class ProductController
             @RequestParam(required = false) Boolean sortType,
 
             @Parameter(description = "The product status")
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+
+            HttpServletRequest request
     ) throws IOException
     {
-        return this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortType, status);
+        try
+        {
+            List<Product> allProductsFiltered = this.productService.findProductsByCriteria(startingPrice, endingPrice, size, material, clothingType, colour, searchQuery, sortType, status);
+            if(!allProductsFiltered.isEmpty())
+            {
+                String token = userService.getJwtTokenFromRequest(request);
+
+                String userId = userService.getUserId(token);
+                if(searchQuery!=null && !searchQuery.isEmpty())
+                {
+                    List<String> searchWords = Arrays.asList(searchQuery.split("\\s+"));
+                    for(String searchedWord : searchWords)
+                    {
+                        SearchDTO searchedWordDTO = new SearchDTO(searchedWord);
+                        Search searchedWordObject = searchService.saveSearch(searchedWordDTO);
+                        if(searchedWordObject != null)
+                        {
+                            String searchId = searchedWordObject.getId();
+                            UserSearch userSearch = new UserSearch(userId, searchId);
+                            userSearchService.saveUserSearch(userSearch);
+                        }
+                        else if(searchService.findByText(searchedWordDTO.getText()).isPresent())
+                        {
+                            String searchId = searchService.findByText(searchedWordDTO.getText()).get().getId();
+                            UserSearch userSearch = new UserSearch(userId, searchId);
+                            userSearchService.saveUserSearch(userSearch);
+                        }
+                    }
+                }
+            }
+            return allProductsFiltered;
+        }
+        catch (InvalidToken invalidToken)
+        {
+            return null;
+        }
     }
 
 

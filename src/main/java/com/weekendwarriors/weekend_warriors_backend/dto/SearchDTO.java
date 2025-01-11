@@ -14,22 +14,9 @@ import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "searches")
 @Getter
 @Setter
-public class Search
+public class SearchDTO
 {
-    @Id
-    private String id;
-
     private String text;
-
-    public Search(String text)
-    {
-        this.text = text;
-    }
-
-    @DBRef
-    @JsonIgnore
-    private List<UserSearch> userSearches;
 }
