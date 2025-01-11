@@ -6,15 +6,18 @@ import com.weekendwarriors.weekend_warriors_backend.dto.OrderedProduct;
 import com.weekendwarriors.weekend_warriors_backend.exception.ProductNotFound;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.service.OrderService;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Validated
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -27,7 +30,7 @@ public class OrderController {
     }
 
     @GetMapping("/top")
-    public ResponseEntity<List<OrderedProduct>> getTopOrderedProducts(@RequestParam(defaultValue = "10") int n) {
+    public ResponseEntity<List<OrderedProduct>> getTopOrderedProducts(@RequestParam(defaultValue = "10") @Min(1) int n) {
         return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTopMostOrderedProducts(n));
     }
 
