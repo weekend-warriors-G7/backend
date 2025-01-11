@@ -21,7 +21,7 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
 
-    @GetMapping("")
+    @GetMapping("/buyer")
     public ResponseEntity<List<OrderForBuyerDTO>> getOrdersForUser() throws UserNotFound {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getAllOrdersForCurrentUser());
     }
@@ -31,7 +31,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(this.orderService.getTopMostOrderedProducts(n));
     }
 
-    @GetMapping("/sold")
+    @GetMapping("/seller")
     public ResponseEntity<List<OrderForSellerDTO>> getSoldOrderedProducts() throws UserNotFound {
         return ResponseEntity.status(HttpStatus.OK).body(orderService.getOrdersPlacedByOtherUsersForProductsSoldByCurrentUser());
     }
