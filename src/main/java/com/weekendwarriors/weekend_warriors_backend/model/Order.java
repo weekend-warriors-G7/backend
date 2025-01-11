@@ -26,4 +26,9 @@ public class Order {
     private Product product;
 
     private Date orderDate = new Date(System.currentTimeMillis());
+
+    public Order(Product product, User user) {
+        this.product = product;
+        this.user = user;
+    }
 }

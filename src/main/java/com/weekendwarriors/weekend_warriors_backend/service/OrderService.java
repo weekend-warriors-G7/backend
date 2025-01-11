@@ -5,11 +5,13 @@ import com.weekendwarriors.weekend_warriors_backend.dto.OrderForBuyerDTO;
 import com.weekendwarriors.weekend_warriors_backend.dto.OrderForSellerDTO;
 import com.weekendwarriors.weekend_warriors_backend.dto.OrderedProduct;
 import com.weekendwarriors.weekend_warriors_backend.exception.NotAuthenticated;
+import com.weekendwarriors.weekend_warriors_backend.exception.ProductNotFound;
 import com.weekendwarriors.weekend_warriors_backend.exception.UserNotFound;
 import com.weekendwarriors.weekend_warriors_backend.model.Order;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.model.User;
 import com.weekendwarriors.weekend_warriors_backend.repository.OrderRepository;
+import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
 import com.weekendwarriors.weekend_warriors_backend.repository.UserRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,12 +29,14 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ImageManagement imageManagement;
     private final MongoTemplate mongoTemplate;
+    private final ProductRepository productRepository;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ImageManagement imageManagement, MongoTemplate mongoTemplate) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ImageManagement imageManagement, MongoTemplate mongoTemplate, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.imageManagement = imageManagement;
         this.mongoTemplate = mongoTemplate;
+        this.productRepository = productRepository;
     }
 
     public List<OrderForBuyerDTO> getAllOrdersForCurrentUser() throws UserNotFound, NotAuthenticated {
@@ -115,6 +119,18 @@ public class OrderService {
                         throw new RuntimeException("Failed to process order due to image link retrieval issue", e);
                     }
                 }).toList();
+    }
+
+    public void placeOrderForCurrentUser(String productId) throws UserNotFound, ProductNotFound {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            String userEmail = authentication.getName();
+            User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new UserNotFound("Invalid email"));
+            Product product = productRepository.findById(productId).orElseThrow(() -> new ProductNotFound("The product was not found"));
+            orderRepository.insert(new Order(product, user));
+        }
+        else
+            throw new NotAuthenticated("Not authenticated");
     }
 
     public List<OrderedProduct> getTopMostOrderedProducts(int n) {
