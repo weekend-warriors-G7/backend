@@ -22,7 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductService {
+public class ProductService
+{
     private final MongoTemplate mongoTemplate;
 
     private final ProductRepository productRepository;
@@ -87,7 +88,7 @@ public class ProductService {
         ArrayList<Product> allProductsWithLinks = new ArrayList<>();
         for(Product product : givenListOfProducts)
         {
-            Product productWithlink = new Product
+            Product productWithLink = new Product
                     (
                             product.getId(),
                             product.getOwner_id(),
@@ -101,7 +102,7 @@ public class ProductService {
                             imageManagement.getImageLink(product.getImageId()),
                             product.getStatus()
                     );
-            allProductsWithLinks.add(productWithlink);
+            allProductsWithLinks.add(productWithLink);
         }
         return allProductsWithLinks;
     }
@@ -153,7 +154,7 @@ public class ProductService {
         ArrayList<Product> allProductsWithLinks = new ArrayList<>();
         for(Product product : productRepository.findAll())
         {
-            Product productWithlink = new Product
+            Product productWithLink = new Product
                     (
                             product.getId(),
                             product.getOwner_id(),
@@ -167,7 +168,7 @@ public class ProductService {
                             imageManagement.getImageLink(product.getImageId()),
                             product.getStatus()
                     );
-            allProductsWithLinks.add(productWithlink);
+            allProductsWithLinks.add(productWithLink);
         }
         return allProductsWithLinks;
     }
@@ -175,7 +176,7 @@ public class ProductService {
     public Product getProductById(String id) throws IOException
     {
         Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-        Product productWithlink = new Product
+        return new Product
                 (
                         product.getId(),
                         product.getOwner_id(),
@@ -189,26 +190,11 @@ public class ProductService {
                         imageManagement.getImageLink(product.getImageId()),
                         product.getStatus()
                 );
-        return productWithlink;
     }
 
-    public List<Product> findProductsByCriteria
-            (
-                    Double startingPrice,
-
-                    Double endingPrice,
-                    String size,
-                    String material,
-                    String clothingType,
-                    String colour,
-                    String searchQuery,
-                    Boolean sortType,
-                    String status
-            )
-            throws IOException
+    public List<Product> findProductsByCriteria( Double startingPrice, Double endingPrice, String size, String material, String clothingType, String colour, String searchQuery, Boolean sortType, String status) throws IOException
     {
         List<Product> filteredProducts = this.findProductsByCriteriaWithoutImageLink(startingPrice, endingPrice, size, material, clothingType, colour,status);
-
 
         List<Product> searchedProducts = this.searchProducts(searchQuery);
         if(searchedProducts!=productRepository.findAll())
@@ -225,16 +211,7 @@ public class ProductService {
         }
     }
 
-    private List<Product> findProductsByCriteriaWithoutImageLink
-            (
-                    Double startingPrice,
-                    Double endingPrice,
-                    String size,
-                    String material,
-                    String clothingType,
-                    String colour,
-                    String status
-            )
+    private List<Product> findProductsByCriteriaWithoutImageLink( Double startingPrice, Double endingPrice, String size, String material, String clothingType, String colour, String status )
     {
         Query query = new Query();
 
@@ -344,7 +321,6 @@ public class ProductService {
                 }
             }
 
-
             String imageLinkOfComparisonProduct = imageManagement.getImageLink(productRepository.findById(productImageToCompareToId).orElse(productRepository.findAll().getFirst()).getImageId());
 
             JSONObject requestBody = new JSONObject();
@@ -400,25 +376,21 @@ public class ProductService {
         }
     }
 
-    public void terminateProducts()
-    {
-        for(Product p : productRepository.findAll())
-            productRepository.deleteById(p.getId());
-    }
-
     public List<Product> getProductsOwnedByUser(String userId) {
-        try {
+        try
+        {
             Query query = new Query();
-            query.addCriteria(Criteria.where("owner_id").is(userId)); // Add filter based on ownerId
+            query.addCriteria(Criteria.where("owner_id").is(userId));
             List<Product> products= mongoTemplate.find(query, Product.class);
             products = products.stream()
                     .map(product -> {
-                        try {
-                            // Update the image ID with the fetched image link
+                        try
+                        {
                             product.setImageId(imageManagement.getImageLink(product.getImageId()));
                             return product;
-                        } catch (IOException e) {
-                            // Handle exceptions properly, e.g., log or rethrow
+                        }
+                        catch (IOException e)
+                        {
                             e.printStackTrace();
                             throw new RuntimeException("Failed to fetch image link for product: " + product.getId(), e);
                         }
@@ -426,9 +398,9 @@ public class ProductService {
                     .collect(Collectors.toList());
 
             return products;
-
-        } catch (Exception e) {
-            // Log the exception and rethrow it if necessary
+        }
+        catch (Exception e)
+        {
             e.printStackTrace();
             throw new RuntimeException("Failed to fetch products for user ID: " + userId, e);
         }
