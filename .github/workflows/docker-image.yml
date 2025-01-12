@@ -23,6 +23,9 @@ jobs:
           IMGUR_CLIENT_SECRET:  ${{ secrets.IMGUR_CLIENT_SECRET }}
           IMGUR_REFRESH_TOKEN:  ${{ secrets.IMGUR_REFRESH_TOKEN }}
           SPRING_SERVLET:  ${{ secrets.SPRING_SERVLET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
+          STRIPE_WEBHOOK_KEY: ${{ secrets.STRIPE_WEBHOOK_KEY }}
           
         run: |
           # Export secrets as environment variables
@@ -33,6 +36,9 @@ jobs:
           echo "IMGUR_CLIENT_SECRET=${IMGUR_CLIENT_SECRET}" >> $GITHUB_ENV
           echo "IMGUR_REFRESH_TOKEN=${IMGUR_REFRESH_TOKEN}" >> $GITHUB_ENV
           echo "SPRING_SERVLET=${SPRING_SERVLET}" >> $GITHUB_ENV
+          echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" >> $GITHUB_ENV
+          echo "STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}" >> $GITHUB_ENV
+          echo "STRIPE_WEBHOOK_KEY=${STRIPE_WEBHOOK_KEY}" >> $GITHUB_ENV
 
     
       - name: Check out the repository
