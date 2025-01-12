@@ -3,7 +3,6 @@ package com.weekendwarriors.weekend_warriors_backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weekendwarriors.weekend_warriors_backend.dto.UserDTO;
 import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
-import com.weekendwarriors.weekend_warriors_backend.enums.UserRole;
 import com.weekendwarriors.weekend_warriors_backend.exception.InvalidToken;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.model.SearchDTO;
@@ -81,9 +80,7 @@ public class ProductController
         try
         {
             String token = userService.getJwtTokenFromRequest(request);
-
             UserDTO user = userService.getUser(token);
-
             List<Product> products = productService.getProductsOwnedByUser(user.getId());
             Map<String, List<Product>> categorizedProducts = new HashMap<>();
 
@@ -123,14 +120,12 @@ public class ProductController
         }
     }
 
-
     @PostMapping(value = "/add", consumes = {"multipart/form-data"})
     public ResponseEntity<?> addProduct( @RequestPart("product") String productJson, @RequestPart("image") MultipartFile image, HttpServletRequest request)
     {
         try
         {
             String token = userService.getJwtTokenFromRequest(request);
-
             UserDTO user = userService.getUser(token);
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -169,7 +164,6 @@ public class ProductController
             return null;
         }
     }
-
 
     @DeleteMapping("/{id}/delete")
     public void deleteProduct(@PathVariable String id)
@@ -263,7 +257,6 @@ public class ProductController
         }
     }
 
-
     @Operation(
             summary = "Get all products similar to the one on whose page you are now",
             description = "It gives a list of all products that are similar to the one the user is looking at currently, maybe a loading should be implemented, as it takes a while for the code to get data to the ai and back and then interpret it itself.",
@@ -298,12 +291,5 @@ public class ProductController
     @PostConstruct
     public void checkImageIdsForProducts() throws IOException {
         productService.attemptToUpdateImageIds();
-    }
-
-    //forbidden
-    @DeleteMapping("/final")
-    public void terminateProducts()
-    {
-        productService.terminateProducts();
     }
 }
