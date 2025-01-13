@@ -132,7 +132,7 @@ public class ProductController
             ProductDTO productDTO = objectMapper.readValue(productJson, ProductDTO.class);
             String imageId = productService.uploadProductImage(image);
             productDTO.setImageId(imageId);
-            productDTO.setOwner_id(user.getId());
+            productDTO.setSellerId(user.getId());
             productDTO.setStatus(ProductStatus.PENDING);
             ProductDTO productAdded = productService.addProduct(productDTO);
             return ResponseEntity.ok(productAdded);

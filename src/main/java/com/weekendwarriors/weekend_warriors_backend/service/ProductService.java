@@ -2,7 +2,6 @@ package com.weekendwarriors.weekend_warriors_backend.service;
 
 import com.weekendwarriors.weekend_warriors_backend.calls.ImageManagement;
 import com.weekendwarriors.weekend_warriors_backend.dto.ProductDTO;
-import com.weekendwarriors.weekend_warriors_backend.enums.ProductStatus;
 import com.weekendwarriors.weekend_warriors_backend.model.Product;
 import com.weekendwarriors.weekend_warriors_backend.repository.ProductRepository;
 import org.json.JSONArray;
@@ -44,7 +43,7 @@ public class ProductService
     {
         return new Product
                 (
-                        productDTO.getOwner_id(),
+                        productDTO.getSellerId(),
                         productDTO.getName(),
                         productDTO.getPrice(),
                         productDTO.getDescription(),
@@ -62,7 +61,7 @@ public class ProductService
     {
         return new ProductDTO
                 (
-                        product.getOwner_id(),
+                        product.getSellerId(),
                         product.getName(),
                         product.getPrice(),
                         product.getDescription(),
@@ -91,7 +90,7 @@ public class ProductService
             Product productWithLink = new Product
                     (
                             product.getId(),
-                            product.getOwner_id(),
+                            product.getSellerId(),
                             product.getName(),
                             product.getPrice(),
                             product.getDescription(),
@@ -157,7 +156,7 @@ public class ProductService
             Product productWithLink = new Product
                     (
                             product.getId(),
-                            product.getOwner_id(),
+                            product.getSellerId(),
                             product.getName(),
                             product.getPrice(),
                             product.getDescription(),
@@ -179,7 +178,7 @@ public class ProductService
         return new Product
                 (
                         product.getId(),
-                        product.getOwner_id(),
+                        product.getSellerId(),
                         product.getName(),
                         product.getPrice(),
                         product.getDescription(),
