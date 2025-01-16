@@ -26,7 +26,7 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
           STRIPE_WEBHOOK_KEY: ${{ secrets.STRIPE_WEBHOOK_KEY }}
-          
+          STRIPE_PRODUCT_SUBSCRIPTION_ID: ${{ secrets.STRIPE_PRODUCT_SUBSCRIPTION_ID }}
         run: |
           # Export secrets as environment variables
           echo "DATABASE_NAME=${DATABASE_NAME}" >> $GITHUB_ENV
@@ -39,6 +39,7 @@ jobs:
           echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" >> $GITHUB_ENV
           echo "STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY}" >> $GITHUB_ENV
           echo "STRIPE_WEBHOOK_KEY=${STRIPE_WEBHOOK_KEY}" >> $GITHUB_ENV
+          echo "STRIPE_PRODUCT_SUBSCRIPTION_ID=${STRIPE_PRODUCT_SUBSCRIPTION_ID}" >> $GITHUB_ENV
 
     
       - name: Check out the repository
