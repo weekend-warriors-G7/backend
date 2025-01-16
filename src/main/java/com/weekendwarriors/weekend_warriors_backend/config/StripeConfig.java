@@ -12,6 +12,11 @@ public class StripeConfig {
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
+    @Value("${stripe.subscription.id}")
+    private String subscriptionProductId;
+
+    public String getSubscriptionProductId() { return subscriptionProductId; }
+
     public String getSecretKey() {
         return secretKey;
     }
