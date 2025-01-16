@@ -114,6 +114,26 @@ public class UserService{
         return userToDto(retrievedUser);
     }
 
+    public UserDTO updateUserStripeId(String token, String stripeId) throws IOException {
+        String tokenSubject = jwtBearerService.extractSubject(token);
+        if (!jwtBearerService.isTokenValid(token, tokenSubject))
+            throw new InvalidToken("UserService.updateUserFirstName(), invalid token");
+
+        //tokenSubject is itself the userId field
+        User retrievedUser = userRepository.findById(tokenSubject).orElse(null);
+
+        if (retrievedUser == null)
+            throw new IOException("UserService.updateUserFirstName(), database error, user not found");
+
+        if (stripeId != null && !stripeId.isEmpty())
+        {
+            retrievedUser.setStripeId(stripeId);
+        }
+
+        userRepository.save(retrievedUser);
+        return userToDto(retrievedUser);
+    }
+
     public UserDTO updateUserLastName(String token, String lastName) throws IOException {
         String tokenSubject = jwtBearerService.extractSubject(token);
         if (!jwtBearerService.isTokenValid(token, tokenSubject))
@@ -142,6 +162,7 @@ public class UserService{
         userUpdateRequest.setId(userToConvert.getId());
         userUpdateRequest.setRole(userToConvert.getRole().toString());
         userUpdateRequest.setEmail(userToConvert.getEmail());
+        userUpdateRequest.setStripeId(userToConvert.getStripeId());
         return userUpdateRequest;
     }
 }
